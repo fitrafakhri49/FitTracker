@@ -1,98 +1,141 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function FitnessDashboard() {
+  const stats = [
+    { id: 1, title: "Workouts", value: 24 },
+    { id: 2, title: "Calories", value: 3500 },
+    { id: 3, title: "Hours", value: 15 },
+  ];
 
-export default function HomeScreen() {
+  const recentWorkouts = [
+    { id: 1, name: "Chest Day", date: "Dec 10" },
+    { id: 2, name: "Leg Day", date: "Dec 9" },
+    { id: 3, name: "Cardio", date: "Dec 8" },
+  ];
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <ScrollView style={styles.container}>
+      {/* Header */}
+      <Text style={styles.header}>Hello, Fakhri 👋</Text>
+      <Text style={styles.subHeader}>Your Fitness Dashboard</Text>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      {/* Stats Cards */}
+      <View style={styles.statsContainer}>
+        {stats.map((stat) => (
+          <View key={stat.id} style={styles.card}>
+            <Text style={styles.cardValue}>{stat.value}</Text>
+            <Text style={styles.cardTitle}>{stat.title}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Quick Actions */}
+      <View style={styles.actionsContainer}>
+        <TouchableOpacity style={styles.actionButton}>
+          <Text style={styles.actionText}>Start Workout</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton}>
+          <Text style={styles.actionText}>History</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton}>
+          <Text style={styles.actionText}>Profile</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Recent Workouts */}
+      <Text style={styles.sectionTitle}>Recent Workouts</Text>
+      <View>
+        {recentWorkouts.map((workout) => (
+          <View key={workout.id} style={styles.workoutItem}>
+            <Text style={styles.workoutName}>{workout.name}</Text>
+            <Text style={styles.workoutDate}>{workout.date}</Text>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: "#f4f6f8",
+    padding: 20,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  header: {
+    fontSize: 28,
+    fontWeight: "bold",
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  subHeader: {
+    fontSize: 16,
+    color: "#555",
+    marginBottom: 20,
+  },
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  card: {
+    width: "30%",
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  cardValue: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  cardTitle: {
+    marginTop: 5,
+    fontSize: 14,
+    color: "#888",
+  },
+  actionsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  actionButton: {
+    backgroundColor: "#4caf50",
+    padding: 12,
+    borderRadius: 8,
+    width: "30%",
+    alignItems: "center",
+  },
+  actionText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  workoutItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  workoutName: {
+    fontSize: 16,
+  },
+  workoutDate: {
+    color: "#888",
   },
 });
