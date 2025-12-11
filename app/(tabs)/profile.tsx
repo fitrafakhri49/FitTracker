@@ -1,7 +1,17 @@
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "expo-router";
 import React from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
-
+import {
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 export default function ProfileScreen() {
+  const router = useRouter();
   // Dummy user data
   const user = {
     name: "Fakhri Fitra",
@@ -10,7 +20,14 @@ export default function ProfileScreen() {
     maintenanceCalories: 2500,
     profileImage: "https://i.pravatar.cc/150?img=12",
   };
-
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      Alert.alert("Error", error.message);
+    } else {
+      router.replace("/login"); // arahkan ke login setelah logout
+    }
+  };
   return (
     <ScrollView style={styles.container}>
       {/* Profile Header */}
@@ -41,6 +58,10 @@ export default function ProfileScreen() {
           other details here.
         </Text>
       </View>
+      {/* Logout Button */}
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutText}>Logout</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -113,4 +134,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#555",
   },
+  logoutButton: {
+    backgroundColor: "#e53935",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  logoutText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
 });

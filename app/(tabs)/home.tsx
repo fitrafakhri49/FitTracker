@@ -1,4 +1,6 @@
-import React from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import React, { useEffect } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -8,6 +10,8 @@ import {
 } from "react-native";
 
 export default function FitnessDashboard() {
+  const router = useRouter();
+
   const stats = [
     { id: 1, title: "Workouts", value: 24 },
     { id: 2, title: "Calories", value: 3500 },
@@ -19,6 +23,16 @@ export default function FitnessDashboard() {
     { id: 2, name: "Leg Day", date: "Dec 9" },
     { id: 3, name: "Cardio", date: "Dec 8" },
   ];
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = await AsyncStorage.getItem("sb-token");
+      console.log(token);
+      if (!token) {
+        router.replace("/login"); // redirect kalau token tidak ada
+      }
+    };
+    checkToken();
+  }, []);
 
   return (
     <ScrollView style={styles.container}>
