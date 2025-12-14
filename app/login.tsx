@@ -1,6 +1,6 @@
+import { supabase } from "@/lib/supabase"; // Import supabase client
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -22,6 +22,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [pulseAnim] = useState(new Animated.Value(1));
+  const [userInfo, setUserInfo] = useState<any>(null);
 
   const startPulseAnimation = () => {
     Animated.loop(
@@ -48,25 +49,45 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await axios.post(
-        "http://192.168.18.247:3000/api/v1/auth/login",
-        { email, password }
-      );
+      // OPTION 1: Login langsung dengan Supabase Client (Direkomendasikan)
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      const session = res.data.session; // ambil session dari backend
-      if (session?.access_token) {
-        // Simpan token di AsyncStorage
-        await AsyncStorage.setItem("sb-token", session.access_token);
+      if (error) {
+        throw error;
       }
-      console.log(AsyncStorage.getItem("sb-token"));
 
-      Alert.alert("Access Granted", "Welcome to the Arena!");
-      router.replace("/(tabs)/home");
+      if (data.session) {
+        // Simpan session di AsyncStorage
+        await AsyncStorage.setItem(
+          "sb-session",
+          JSON.stringify({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+            expires_at: data.session.expires_at,
+            user: {
+              id: data.user.id,
+              email: data.user.email,
+              name:
+                data.user.user_metadata?.full_name ||
+                data.user.email?.split("@")[0],
+              avatar_url: data.user.user_metadata?.avatar_url,
+            },
+          })
+        );
+
+        console.log("Login successful:", data.user.email);
+
+        Alert.alert("Access Granted", "Welcome to the Arena!");
+        router.replace("/(tabs)/home");
+      } else {
+        throw new Error("No session returned");
+      }
     } catch (err: any) {
-      Alert.alert(
-        "Access Denied",
-        err.response?.data?.error || "Invalid credentials"
-      );
+      console.error("Login error:", err);
+      Alert.alert("Access Denied", err.message || "Invalid credentials");
     } finally {
       setLoading(false);
     }
@@ -171,14 +192,6 @@ export default function Login() {
           <View style={styles.dividerLine} />
           <Text style={styles.dividerText}>ATAU LOGIN DENGAN</Text>
           <View style={styles.dividerLine} />
-        </View>
-
-        {/* Social Login */}
-        <View style={styles.socialGrid}>
-          <TouchableOpacity style={[styles.socialButton, styles.googleButton]}>
-            <FontAwesome5 name="google" size={20} color="#1D24CA" />
-            <Text style={styles.socialText}>Google</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Register Section */}

@@ -113,7 +113,24 @@ export default function Register() {
         </View>
 
         {/* Name Input */}
-
+        <View style={styles.inputField}>
+          <View style={styles.inputIcon}>
+            <MaterialIcons name="person" size={20} color="#666" />
+          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="FULL NAME"
+            placeholderTextColor="#666"
+            value={name}
+            onChangeText={setName}
+            editable={!loading}
+          />
+          {name ? (
+            <View style={styles.inputStatus}>
+              <FontAwesome5 name="check-circle" size={16} color="#00FF00" />
+            </View>
+          ) : null}
+        </View>
         {/* Email Input */}
         <View style={styles.inputField}>
           <View style={styles.inputIcon}>

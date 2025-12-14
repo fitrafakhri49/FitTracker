@@ -6,6 +6,9 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "fittracker",
+    "extra": {
+      "expoClientId": "646631206058-lq60pl2ftjp1fo9ej76d2j8l74hocnnn.apps.googleusercontent.com"
+    },
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
