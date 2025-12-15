@@ -697,7 +697,7 @@ export default function WorkoutScreen() {
       <TouchableOpacity
         style={styles.addWorkoutButton}
         activeOpacity={0.7}
-        onPress={addNewWorkout}
+        onPress={() => router.push("/add-workout")}
       >
         <View style={styles.addButtonIcon}>
           <FontAwesome5 name="plus" size={20} color="#000" />
