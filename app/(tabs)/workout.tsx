@@ -14,6 +14,8 @@ import {
   View,
 } from "react-native";
 
+import axios from "axios";
+
 // Format duration
 const formatDuration = (minutes: number) => {
   if (minutes < 60) {
@@ -109,6 +111,51 @@ export default function WorkoutScreen() {
     return null;
   };
 
+  const addNewWorkout = async () => {
+    try {
+      // Ambil session Supabase
+
+      const sessionStr = await AsyncStorage.getItem("sb-session");
+      const session = sessionStr ? JSON.parse(sessionStr) : null;
+      const accessToken = session?.access_token;
+
+      // Contoh payload workout baru
+      const payload = {
+        name: "New Workout",
+        exercises: [
+          {
+            exerciseId: "00257120-3a6a-4fd2-9e1a-511331e7818d", // ganti dengan exerciseId valid dari db
+            sets: 4,
+            reps: 12,
+            rest: 60,
+          },
+        ],
+      };
+
+      const response = await axios.post(
+        "http://192.168.18.247:3000/api/v1/workouts",
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      console.log("Workout created:", response.data);
+      // Refresh list workouts
+      fetchWorkouts();
+    } catch (err: any) {
+      if (err.response) {
+        // Error dari server
+        console.error("Server error:", err.response.data);
+      } else {
+        // Error lain
+        console.error("Error in addNewWorkout:", err.message);
+      }
+    }
+  };
   // Check authentication
   const checkAuth = async () => {
     try {
@@ -161,44 +208,66 @@ export default function WorkoutScreen() {
     try {
       setLoading(true);
 
-      const isAuthenticated = await checkAuth();
-      if (!isAuthenticated) return;
+      // Ambil session dari AsyncStorage (Supabase)
+      const sessionStr = await AsyncStorage.getItem("sb-session");
+      const session = sessionStr ? JSON.parse(sessionStr) : null;
+      const accessToken = session?.access_token;
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.user) return;
-
-      // Fetch workouts dari database
-      const { data, error } = await supabase
-        .from("workouts")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .order("date", { ascending: false })
-        .limit(20);
-
-      if (error) {
-        console.error("Error fetching workouts:", error);
-        // Fallback ke dummy data
-        useDummyData();
+      if (!accessToken) {
+        router.replace("/login");
         return;
       }
 
-      if (data && data.length > 0) {
-        setWorkouts(data);
+      // Panggil backend Express
+      const response = await axios.get(
+        "http://192.168.18.247:3000/api/v1/workouts",
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
-        // Calculate stats
-        const totalWorkouts = data.length;
-        const totalDuration = data.reduce(
-          (sum, workout) => sum + (workout.duration_minutes || 0),
+      const data = response.data.data; // backend mengembalikan { success, data }
+
+      if (data && data.length > 0) {
+        // Mapping data sesuai frontend
+        const mappedWorkouts = data.map((w: any) => ({
+          id: w.id,
+          workout_name: w.name,
+          workout_type:
+            w.WorkoutExercise.length > 0
+              ? w.WorkoutExercise[0].exercise.exerciseType
+              : "Strength",
+          duration_minutes: w.WorkoutExercise.reduce(
+            (sum: number, ex: any) => sum + ex.sets * ex.reps * 1, // dummy 1 min per rep
+            0
+          ),
+          calories_burned: w.WorkoutExercise.reduce(
+            (sum: number, ex: any) => sum + ex.sets * ex.reps * 5, // dummy 5 cal per rep
+            0
+          ),
+          date: w.createdAt,
+          notes: w.WorkoutExercise.map((ex: any) => ex.exercise.name).join(
+            ", "
+          ),
+        }));
+
+        setWorkouts(mappedWorkouts);
+
+        // Stats
+        const totalWorkouts = mappedWorkouts.length;
+        const totalDuration = mappedWorkouts.reduce(
+          (sum: any, w: any) => sum + w.duration_minutes,
           0
         );
-        const totalCalories = data.reduce(
-          (sum, workout) => sum + (workout.calories_burned || 0),
+        const totalCalories = mappedWorkouts.reduce(
+          (sum: any, w: any) => sum + w.calories_burned,
           0
         );
-        const avgDuration =
-          totalWorkouts > 0 ? Math.round(totalDuration / totalWorkouts) : 0;
+        const avgDuration = totalWorkouts
+          ? Math.round(totalDuration / totalWorkouts)
+          : 0;
 
         setStats({
           totalWorkouts,
@@ -207,12 +276,11 @@ export default function WorkoutScreen() {
           avgDuration,
         });
       } else {
-        // Jika tidak ada data, gunakan dummy data
-        useDummyData();
+        setWorkouts([]);
       }
-    } catch (error) {
-      console.error("Error in fetchWorkouts:", error);
-      useDummyData();
+    } catch (error: any) {
+      console.error("Error fetching workouts:", error);
+      setWorkouts([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -629,7 +697,7 @@ export default function WorkoutScreen() {
       <TouchableOpacity
         style={styles.addWorkoutButton}
         activeOpacity={0.7}
-        onPress={() => console.log("Add new workout")}
+        onPress={addNewWorkout}
       >
         <View style={styles.addButtonIcon}>
           <FontAwesome5 name="plus" size={20} color="#000" />

@@ -49,7 +49,6 @@ export default function Login() {
 
     setLoading(true);
     try {
-      // OPTION 1: Login langsung dengan Supabase Client (Direkomendasikan)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -60,7 +59,6 @@ export default function Login() {
       }
 
       if (data.session) {
-        // Simpan session di AsyncStorage
         await AsyncStorage.setItem(
           "sb-session",
           JSON.stringify({
