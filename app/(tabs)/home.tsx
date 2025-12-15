@@ -104,9 +104,6 @@ export default function FitnessDashboard() {
         hours: Math.floor(uniqueWorkout.size * 1.5),
       });
 
-      // =========================
-      // MAP KE RECENT WORKOUTS UI
-      // =========================
       const mappedRecent = history.slice(0, 5).map((h: any) => ({
         id: h.WorkoutHistory?.id,
         name: h.WorkoutHistory?.name,
@@ -434,7 +431,12 @@ export default function FitnessDashboard() {
             key={workout.id}
             style={styles.workoutCard}
             activeOpacity={0.7}
-            onPress={() => console.log("View workout:", workout.id)}
+            onPress={() =>
+              router.push({
+                pathname: "/workout-history/[id]",
+                params: { id: workout.id },
+              })
+            }
           >
             <View style={styles.workoutHeader}>
               <View style={styles.workoutTypeBadge}>
