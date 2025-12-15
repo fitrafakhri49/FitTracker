@@ -116,3 +116,42 @@ export async function createWorkout(req: Request, res: Response) {
         res.status(500).json({ message: error.message });
     }
   }
+
+  export async function getSpecificWorkout(req: AuthRequest, res: Response) {
+    try {
+      const user = req.user;
+  
+      if (!user?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+  
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({ message: "Workout ID is required" });
+      }
+  
+      const workout = await prisma.workout.findFirst({
+        where: {
+          id,
+          user_id: user.id, // pastikan workout milik user ini
+        },
+        include: {
+          WorkoutExercise: {
+            include: {
+              exercise: true, // ambil detail exercise
+            },
+          },
+        },
+      });
+  
+      if (!workout) {
+        return res.status(404).json({ message: "Workout not found" });
+      }
+  
+      res.status(200).json({ success: true, data: workout });
+    } catch (error: any) {
+      console.error("Get specific workout error:", error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+  
