@@ -335,6 +335,58 @@ export async function createWorkout(req: Request, res: Response) {
     }
   }
   
-  
+
+
+export async function getWorkoutHistoryDetail(req: Request, res: Response) {
+  try {
+    const user = (req as any).user;
+    const { id } = req.params;
+
+    if (!user?.id) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const workoutHistory = await prisma.workoutHistory.findFirst({
+      where: {
+        id: id,
+        user_id: user.id,
+      },
+      include: {
+        WorkoutHistoryExercise: true,
+      },
+    });
+
+    if (!workoutHistory) {
+      return res.status(404).json({
+        success: false,
+        message: "Workout history not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: workoutHistory.id,
+        name: workoutHistory.name,
+        createdAt: workoutHistory.createdAt,
+        exercises: workoutHistory.WorkoutHistoryExercise.map((ex) => ({
+          id: ex.id,
+          exerciseId: ex.exerciseId,
+          name: ex.name,
+          sets: ex.sets,
+          reps: ex.reps,
+          weight: ex.weight,
+        })),
+      },
+    });
+  } catch (error: any) {
+    console.error("Get workout history detail error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
   
   
