@@ -111,51 +111,6 @@ export default function WorkoutScreen() {
     return null;
   };
 
-  const addNewWorkout = async () => {
-    try {
-      // Ambil session Supabase
-
-      const sessionStr = await AsyncStorage.getItem("sb-session");
-      const session = sessionStr ? JSON.parse(sessionStr) : null;
-      const accessToken = session?.access_token;
-
-      // Contoh payload workout baru
-      const payload = {
-        name: "New Workout",
-        exercises: [
-          {
-            exerciseId: "00257120-3a6a-4fd2-9e1a-511331e7818d", // ganti dengan exerciseId valid dari db
-            sets: 4,
-            reps: 12,
-            rest: 60,
-          },
-        ],
-      };
-
-      const response = await axios.post(
-        "http://192.168.18.247:3000/api/v1/workouts",
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        }
-      );
-
-      console.log("Workout created:", response.data);
-      // Refresh list workouts
-      fetchWorkouts();
-    } catch (err: any) {
-      if (err.response) {
-        // Error dari server
-        console.error("Server error:", err.response.data);
-      } else {
-        // Error lain
-        console.error("Error in addNewWorkout:", err.message);
-      }
-    }
-  };
   // Check authentication
   const checkAuth = async () => {
     try {
@@ -625,6 +580,18 @@ export default function WorkoutScreen() {
                 >
                   <FontAwesome5 name="share-alt" size={14} color="#666" />
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.startWorkoutButton}
+                  activeOpacity={0.8}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/startWorkout/[workoutId]",
+                      params: { workoutId: workout.id },
+                    })
+                  }
+                >
+                  <Text style={styles.startWorkoutText}>START WORKOUT</Text>
+                </TouchableOpacity>
               </View>
             </Animated.View>
           ))
@@ -1054,5 +1021,20 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 2,
     marginTop: 5,
+  },
+  startWorkoutButton: {
+    flex: 1,
+    backgroundColor: "#1D24CA",
+    paddingVertical: 10,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 10,
+  },
+  startWorkoutText: {
+    color: "#FFF",
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1,
   },
 });
