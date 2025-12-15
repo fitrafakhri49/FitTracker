@@ -165,7 +165,7 @@ export default function StartWorkoutScreen() {
                 reps: ex.reps || 10,
                 weight: ex.weight || 0,
                 image:
-                  ex.exercise?.image ||
+                  ex.exercise?.imageUrl ||
                   "https://images.unsplash.com/photo-1536922246289-88c42f957773?w=150&h=150&fit=crop",
               }))
             : [],
@@ -233,19 +233,16 @@ export default function StartWorkoutScreen() {
 
   const toggleSet = (exerciseIdx: number, setIdx: number) => {
     const newSetsData = { ...setsData };
-    if (newSetsData[exerciseIdx] && newSetsData[exerciseIdx][setIdx]) {
-      newSetsData[exerciseIdx][setIdx].completed =
-        !newSetsData[exerciseIdx][setIdx].completed;
-      setSetsData(newSetsData);
 
-      // If completing last set, show rest timer modal
-      if (
-        newSetsData[exerciseIdx][setIdx].completed &&
-        setIdx === newSetsData[exerciseIdx].length - 1 &&
-        exerciseIdx < (workout?.exercises.length || 0) - 1
-      ) {
-        startRestTimer();
-      }
+    const currentSet = newSetsData[exerciseIdx]?.[setIdx];
+    if (!currentSet) return;
+
+    currentSet.completed = !currentSet.completed;
+    setSetsData(newSetsData);
+
+    // ✅ REST TIMER MUNCUL SETIAP SET SELESAI
+    if (currentSet.completed && !showRestModal) {
+      startRestTimer(60);
     }
   };
 

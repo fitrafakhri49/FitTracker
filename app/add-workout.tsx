@@ -95,6 +95,7 @@ export default function AddWorkoutScreen() {
           sets: ex.sets,
           reps: ex.reps,
           rest: ex.rest,
+          weight: ex.weight,
         })),
       };
 
@@ -136,6 +137,7 @@ export default function AddWorkoutScreen() {
           sets: 3,
           reps: 10,
           rest: 60,
+          weight: 0, // ✅ TAMBAH
         },
         ...prev,
       ]);
@@ -289,6 +291,18 @@ export default function AddWorkoutScreen() {
                 updateExercise(ex.exerciseId, "rest", Number(val))
               }
             />
+          </View>
+          <View style={styles.rowField}>
+            <Text style={styles.fieldLabel}>Weight:</Text>
+            <TextInput
+              style={styles.inputSmall}
+              keyboardType="numeric"
+              value={String(ex.weight ?? 0)}
+              onChangeText={(val) =>
+                updateExercise(ex.exerciseId, "weight", Number(val))
+              }
+            />
+            <Text>KG</Text>
           </View>
         </View>
       ))}

@@ -1,10 +1,10 @@
-import { supabase } from "@/lib/supabase";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Animated,
   RefreshControl,
   ScrollView,
@@ -111,51 +111,48 @@ export default function WorkoutScreen() {
     return null;
   };
 
-  // Check authentication
-  const checkAuth = async () => {
-    try {
-      // Cek session dari Supabase
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
+  const handleDeleteWorkout = async (workoutId: string) => {
+    Alert.alert(
+      "Delete Workout",
+      "Are you sure you want to delete this workout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const sessionStr = await AsyncStorage.getItem("sb-session");
+              const session = sessionStr ? JSON.parse(sessionStr) : null;
+              const accessToken = session?.access_token;
 
-      if (sessionError) {
-        console.error("Session error:", sessionError);
-        // Coba load dari AsyncStorage
-        const savedSession = await loadSession();
-        if (savedSession?.access_token) {
-          // Set session di supabase client
-          await supabase.auth.setSession({
-            access_token: savedSession.access_token,
-            refresh_token: savedSession.refresh_token,
-          });
+              if (!accessToken) {
+                router.replace("/login");
+                return;
+              }
 
-          // Coba get session lagi
-          const {
-            data: { session: newSession },
-          } = await supabase.auth.getSession();
-          if (newSession?.user) {
-            return true;
-          }
-        }
+              await axios.delete(
+                `http://192.168.18.247:3000/api/v1/workouts/${workoutId}`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                  },
+                }
+              );
 
-        // Jika masih gagal, redirect ke login
-        router.replace("/login");
-        return false;
-      }
-
-      if (!session?.user) {
-        router.replace("/login");
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Auth check error:", error);
-      router.replace("/login");
-      return false;
-    }
+              // Update UI tanpa reload full
+              setWorkouts((prev) => prev.filter((w) => w.id !== workoutId));
+            } catch (error) {
+              console.error("Delete workout error:", error);
+              Alert.alert("Error", "Failed to delete workout");
+            }
+          },
+        },
+      ]
+    );
   };
 
   // Fetch workouts data
@@ -243,76 +240,6 @@ export default function WorkoutScreen() {
   };
 
   // Fallback ke data dummy
-  const useDummyData = () => {
-    const dummyWorkouts = [
-      {
-        id: "1",
-        workout_name: "Chest Day",
-        workout_type: "Strength",
-        duration_minutes: 60,
-        calories_burned: 400,
-        date: new Date().toISOString(),
-        notes: "Bench press, incline press, flys",
-      },
-      {
-        id: "2",
-        workout_name: "Leg Day",
-        workout_type: "Strength",
-        duration_minutes: 75,
-        calories_burned: 500,
-        date: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-        notes: "Squats, lunges, deadlifts",
-      },
-      {
-        id: "3",
-        workout_name: "Morning Cardio",
-        workout_type: "Cardio",
-        duration_minutes: 45,
-        calories_burned: 350,
-        date: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-        notes: "Treadmill and cycling",
-      },
-      {
-        id: "4",
-        workout_name: "Full Body",
-        workout_type: "Strength",
-        duration_minutes: 80,
-        calories_burned: 550,
-        date: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
-        notes: "Compound movements",
-      },
-      {
-        id: "5",
-        workout_name: "Yoga Session",
-        workout_type: "Flexibility",
-        duration_minutes: 50,
-        calories_burned: 200,
-        date: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
-        notes: "Morning yoga flow",
-      },
-    ];
-
-    setWorkouts(dummyWorkouts);
-
-    // Calculate stats dari dummy data
-    const totalWorkouts = dummyWorkouts.length;
-    const totalDuration = dummyWorkouts.reduce(
-      (sum, workout) => sum + workout.duration_minutes,
-      0
-    );
-    const totalCalories = dummyWorkouts.reduce(
-      (sum, workout) => sum + workout.calories_burned,
-      0
-    );
-    const avgDuration = Math.round(totalDuration / totalWorkouts);
-
-    setStats({
-      totalWorkouts,
-      totalDuration,
-      totalCalories,
-      avgDuration,
-    });
-  };
 
   // Handle refresh
   const onRefresh = () => {
@@ -574,12 +501,15 @@ export default function WorkoutScreen() {
                   <MaterialIcons name="edit" size={16} color="#1D24CA" />
                   <Text style={styles.editButtonText}>EDIT</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
                   style={styles.shareButton}
                   activeOpacity={0.7}
+                  onPress={() => handleDeleteWorkout(workout.id)}
                 >
-                  <FontAwesome5 name="share-alt" size={14} color="#666" />
+                  <MaterialIcons name="delete" size={16} color="#FF6B6B" />
                 </TouchableOpacity>
+
                 <TouchableOpacity
                   style={styles.startWorkoutButton}
                   activeOpacity={0.8}
