@@ -56,6 +56,7 @@ export async function createWorkout(req: Request, res: Response) {
               sets: ex.sets,
               reps: ex.reps,
               rest: ex.rest,
+              weight:ex.weight ?? null
             })),
           },
         },
@@ -117,9 +118,9 @@ export async function createWorkout(req: Request, res: Response) {
     }
   }
 
-  export async function getSpecificWorkout(req: AuthRequest, res: Response) {
+  export async function getSpecificWorkout(req: Request, res: Response) {
     try {
-      const user = req.user;
+        const user = (req as any).user
   
       if (!user?.id) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -133,12 +134,24 @@ export async function createWorkout(req: Request, res: Response) {
       const workout = await prisma.workout.findFirst({
         where: {
           id,
-          user_id: user.id, // pastikan workout milik user ini
+          user_id: user.id,
         },
         include: {
           WorkoutExercise: {
             include: {
-              exercise: true, // ambil detail exercise
+              exercise: {
+                select: {
+                  id: true,
+                  name: true,
+                  exerciseType: true,
+                  imageUrl: true,
+                  videoUrl: true,
+                  bodyParts: true,
+                  equipments: true,
+                  targetMuscles: true,
+                  secondaryMuscles: true,
+                },
+              },
             },
           },
         },
@@ -148,9 +161,138 @@ export async function createWorkout(req: Request, res: Response) {
         return res.status(404).json({ message: "Workout not found" });
       }
   
-      res.status(200).json({ success: true, data: workout });
+      res.status(200).json({
+        success: true,
+        data: workout,
+      });
     } catch (error: any) {
       console.error("Get specific workout error:", error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+  
+  
+
+  
+  export async function saveWorkoutHistory(req: Request, res: Response) {
+    try {
+      const user = (req as any).user;
+  
+      if (!user?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+  
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({ message: "Workout ID is required" });
+      }
+  
+      // 1️⃣ Ambil workout + exercises
+      const workout = await prisma.workout.findFirst({
+        where: {
+          id,
+          user_id: user.id,
+        },
+        include: {
+          WorkoutExercise: {
+            include: {
+              exercise: true,
+            },
+          },
+        },
+      });
+  
+      if (!workout) {
+        return res.status(404).json({ message: "Workout not found" });
+      }
+  
+      // 2️⃣ Simpan ke history (TRANSACTION)
+      const history = await prisma.$transaction(async (tx) => {
+        // header history
+        const workoutHistory = await tx.workoutHistory.create({
+          data: {
+            user_id: user.id,
+            workoutId: workout.id,
+            name: workout.name,
+          },
+        });
+  
+        // detail exercises
+        for (const we of workout.WorkoutExercise) {
+          await tx.workoutHistoryExercise.create({
+            data: {
+              workoutHistoryId: workoutHistory.id,
+              exerciseId: we.exerciseId!,
+              name: we.exercise?.name || "Unknown Exercise",
+              sets: we.sets,
+              reps: we.reps,
+              weight: we.weight ?? 0,
+            },
+          });
+        }
+  
+        return workoutHistory;
+      });
+  
+      return res.status(201).json({
+        success: true,
+        message: "Workout history saved successfully",
+        data: history,
+      });
+    } catch (error: any) {
+      console.error("Save workout history error:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message || "Internal server error",
+      });
+    }
+  }
+  
+
+  export async function deleteWorkout(req: Request, res: Response) {
+    try {
+      const user = (req as any).user;
+  
+      if (!user?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+  
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({ message: "Workout ID is required" });
+      }
+  
+      // Pastikan workout milik user
+      const workout = await prisma.workout.findFirst({
+        where: {
+          id,
+          user_id: user.id,
+        },
+      });
+  
+      if (!workout) {
+        return res.status(404).json({ message: "Workout not found" });
+      }
+  
+      await prisma.$transaction([
+        prisma.workoutExercise.deleteMany({
+          where: {
+            workoutId: id,
+          },
+        }),
+        prisma.workout.delete({
+          where: {
+            id,
+          },
+        }),
+      ]);
+  
+      return res.status(200).json({
+        success: true,
+        message: "Workout deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Delete workout error:", error);
       res.status(500).json({ message: error.message });
     }
   }

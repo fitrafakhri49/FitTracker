@@ -83,7 +83,29 @@ model WorkoutExercise {
   sets       Int
   reps       Int
   rest       Int
+  weight     Int?
 
   workout  Workout  @relation(fields: [workoutId], references: [id])
   exercise Exercise @relation(fields: [exerciseId], references: [id])
+}
+
+model WorkoutHistory {
+  id        String   @id @default(cuid())
+  user_id   String
+  workoutId String
+  name      String
+  createdAt DateTime @default(now())
+
+  WorkoutHistoryExercise WorkoutHistoryExercise[]
+}
+
+model WorkoutHistoryExercise {
+  id               String         @id @default(cuid())
+  workoutHistoryId String
+  exerciseId       String
+  name             String
+  sets             Int
+  reps             Int
+  weight           Float?
+  WorkoutHistory   WorkoutHistory @relation(fields: [workoutHistoryId], references: [id])
 }
