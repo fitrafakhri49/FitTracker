@@ -1,7 +1,7 @@
 import { prisma } from "../prisma/client";
 import { Request,Response } from "express";
-import { supabase } from "../supabase/client";
-import { requireAuth,AuthRequest } from "../middlewares/auth";
+// import { supabase } from "../supabase/client";
+// import { requireAuth,AuthRequest } from "../middlewares/auth";
 
 export async function createWorkout(req: Request, res: Response) {
     try {
@@ -296,4 +296,45 @@ export async function createWorkout(req: Request, res: Response) {
       res.status(500).json({ message: error.message });
     }
   }
+
+  export async function getAllHistoryWorkoutExercise(
+    req: Request,
+    res: Response
+  ) {
+    try {
+      const user = (req as any).user;
+  
+      if (!user?.id) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+  
+      const historyExercises =
+        await prisma.workoutHistoryExercise.findMany({
+          where: {
+            WorkoutHistory: {
+              user_id: user.id,
+            },
+          },
+          include: {
+            WorkoutHistory: true,
+          },
+          orderBy: {
+            WorkoutHistory: {
+              createdAt: "desc",
+            },
+          },
+        });
+  
+      res.status(200).json({
+        success: true,
+        data: historyExercises,
+      });
+    } catch (error: any) {
+      console.error("Get workout history error:", error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+  
+  
+  
   
