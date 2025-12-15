@@ -33,6 +33,7 @@ export default function FitnessDashboard() {
     caloriesBurned: 0,
     hours: 0,
   });
+  const [recentWorkouts, setRecentWorkouts] = useState<any[]>([]);
 
   // Animasi untuk cards
   const [cardAnim] = useState(new Animated.Value(0));
@@ -62,53 +63,66 @@ export default function FitnessDashboard() {
     },
   ];
 
-  const recentWorkouts = [
-    {
-      id: 1,
-      name: "Chest Day",
-      date: "Dec 10",
-      type: "Strength",
-      duration: "60 min",
-    },
-    {
-      id: 2,
-      name: "Leg Day",
-      date: "Dec 9",
-      type: "Strength",
-      duration: "75 min",
-    },
-    {
-      id: 3,
-      name: "Cardio",
-      date: "Dec 8",
-      type: "Cardio",
-      duration: "45 min",
-    },
-  ];
+  const fetchWorkoutHistory = async () => {
+    try {
+      const sessionStr = await AsyncStorage.getItem("sb-session");
+      if (!sessionStr) return;
 
-  const quickActions = [
-    {
-      id: 1,
-      title: "Start Workout",
-      icon: "play-circle",
-      color: "#1D24CA",
-      onPress: () => console.log("Start Workout"),
-    },
-    {
-      id: 2,
-      title: "History",
-      icon: "history",
-      color: "#FF6B6B",
-      onPress: () => router.push("/profile"),
-    },
-    {
-      id: 3,
-      title: "Profile",
-      icon: "user",
-      color: "#4ECDC4",
-      onPress: () => router.push("/profile"),
-    },
-  ];
+      const session = JSON.parse(sessionStr);
+      const accessToken = session.access_token;
+
+      const res = await fetch(
+        "http://192.168.18.247:3000/api/v1/workouts/history/exercises",
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const json = await res.json();
+      if (!json.success) return;
+
+      const history = json.data;
+
+      // =========================
+      // HITUNG STATS DARI HISTORY
+      // =========================
+      const uniqueWorkout = new Set(
+        history.map((h: any) => h.WorkoutHistory?.id)
+      );
+
+      const totalCalories = history.reduce(
+        (sum: number, h: any) => sum + (h.calories || 0),
+        0
+      );
+
+      setUserStats({
+        workoutsCompleted: uniqueWorkout.size,
+        caloriesBurned: totalCalories,
+        hours: Math.floor(uniqueWorkout.size * 1.5),
+      });
+
+      // =========================
+      // MAP KE RECENT WORKOUTS UI
+      // =========================
+      const mappedRecent = history.slice(0, 5).map((h: any) => ({
+        id: h.WorkoutHistory?.id,
+        name: h.WorkoutHistory?.name,
+        date: new Date(h.WorkoutHistory?.createdAt).toLocaleDateString(
+          "en-US",
+          { month: "short", day: "numeric" }
+        ),
+        type: h.exercise?.exerciseType || "Strength",
+        duration: h.WorkoutHistory?.duration || "—",
+      }));
+
+      setRecentWorkouts(mappedRecent);
+    } catch (err) {
+      console.error("Fetch workout history error:", err);
+    }
+  };
 
   // Load session dari AsyncStorage
   const loadSession = async () => {
@@ -190,6 +204,7 @@ export default function FitnessDashboard() {
 
     // Ambil data stats user
     await fetchUserStats(user.id);
+    await fetchWorkoutHistory();
   };
 
   // Ambil data stats user
@@ -404,29 +419,6 @@ export default function FitnessDashboard() {
           </TouchableOpacity>
         ))}
       </Animated.View>
-
-      {/* Quick Actions */}
-      <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
-      <View style={styles.actionsGrid}>
-        {quickActions.map((action) => (
-          <TouchableOpacity
-            key={action.id}
-            style={styles.actionButton}
-            activeOpacity={0.7}
-            onPress={action.onPress}
-          >
-            <View
-              style={[
-                styles.actionIconContainer,
-                { backgroundColor: `${action.color}20` },
-              ]}
-            >
-              <FontAwesome5 name={action.icon} size={24} color={action.color} />
-            </View>
-            <Text style={styles.actionText}>{action.title}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
 
       {/* Recent Workouts */}
       <View style={styles.sectionHeader}>

@@ -316,32 +316,17 @@ export default function StartWorkoutScreen() {
       const session = sessionStr ? JSON.parse(sessionStr) : null;
       const accessToken = session?.access_token;
 
-      if (!accessToken || !userId || !workoutId || !workout) {
-        Alert.alert("Error", "Missing required data to finish workout");
+      if (!accessToken || !workoutId) {
+        Alert.alert("Error", "Authentication error");
         return;
       }
 
-      // Prepare completed exercises data
-      const completedExercises = workout.exercises.map((ex, exIdx) => {
-        const exerciseSets = setsData[exIdx] || [];
-        return {
-          name: ex.name,
-          sets: exerciseSets.map((set, setIdx) => ({
-            setNumber: setIdx + 1,
-            weight: set.weight,
-            reps: set.reps,
-            completed: set.completed,
-          })),
-        };
-      });
+      const workoutIdStr = Array.isArray(workoutId) ? workoutId[0] : workoutId;
 
+      // 🔥 SIMPAN WORKOUT KE HISTORY
       await axios.post(
-        `http://192.168.18.247:3000/api/v1/workouts/${workoutId}/complete`,
-        {
-          user_id: userId,
-          exercises: completedExercises,
-          duration: formatTime(timer),
-        },
+        `http://192.168.18.247:3000/api/v1/workouts/${workoutIdStr}/history`,
+        {},
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -350,9 +335,11 @@ export default function StartWorkoutScreen() {
         }
       );
 
+      setIsTimerRunning(false);
+
       Alert.alert(
         "Workout Completed!",
-        `Great job! Time: ${formatTime(timer)}`,
+        `Great job!\nDuration: ${formatTime(timer)}`,
         [
           {
             text: "Back to Workouts",
@@ -361,11 +348,8 @@ export default function StartWorkoutScreen() {
         ]
       );
     } catch (err) {
-      console.error("Error finishing workout:", err);
-      Alert.alert(
-        "Error",
-        "Failed to save workout. Please check your connection."
-      );
+      console.error("Error saving workout history:", err);
+      Alert.alert("Error", "Failed to save workout history. Please try again.");
     }
   };
 
