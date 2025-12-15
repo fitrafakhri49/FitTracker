@@ -2,38 +2,62 @@
 import { Request, Response, NextFunction } from "express";
 import { supabase } from "../supabase/client";
 
-export async function requireAuth(req: Request, res: Response, next: NextFunction) {
+export interface AuthRequest extends Request {
+  user?: any;
+}
+export async function requireAuth(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "No token provided" });
+    // 1. Cek header Authorization
+    let token = req.headers.authorization?.split(" ")[1];
+
+    // 2. Jika tidak ada header, cek query (misal untuk Expo GET request)
+    if (!token && req.query?.access_token) {
+      token = String(req.query.access_token);
     }
 
-    const token = authHeader.split(" ")[1];
+    // 3. Jika token tetap null → unauthorized
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
 
+    // 4. Ambil user dari Supabase
     const { data, error } = await supabase.auth.getUser(token);
+
     if (error || !data.user) {
-      return res.status(401).json({ error: "Invalid token" });
+      return res.status(401).json({ message: "Invalid or expired token" });
     }
 
-    (req as any).user = data.user;
+    // 5. Simpan user ke request
+    req.user = data.user;
+
     next();
   } catch (err: any) {
-    return res.status(500).json({ error: err.message });
+    console.error("Auth middleware error:", err);
+    return res.status(500).json({ message: "Internal server error" });
   }
 }
-export function setSessionCookie(res: Response, accessToken: string, refreshToken: string) {
-  res.cookie('sb-access-token', accessToken, {
+
+// Set cookie untuk web (opsional)
+export function setSessionCookie(
+  res: Response,
+  accessToken: string,
+  refreshToken: string
+) {
+  res.cookie("sb-access-token", accessToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 3600000, // 1 jam
-    sameSite: 'strict'
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 3600 * 1000, // 1 jam
+    sameSite: "strict",
   });
-  
-  res.cookie('sb-refresh-token', refreshToken, {
+
+  res.cookie("sb-refresh-token", refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 604800000, // 7 hari
-    sameSite: 'strict'
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 7 * 24 * 3600 * 1000, // 7 hari
+    sameSite: "strict",
   });
 }

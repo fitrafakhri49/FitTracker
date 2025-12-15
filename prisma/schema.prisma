@@ -21,7 +21,6 @@ model User {
   name       String?
   avatar_url String?
 
-  // Profile page data
   stats    UserStats?
   workouts Workout[]
 
