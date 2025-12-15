@@ -13,3 +13,78 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
+// User utama
+model User {
+  id         String  @id @default(cuid())
+  email      String  @unique
+  name       String?
+  avatar_url String?
+
+  // Profile page data
+  stats    UserStats?
+  workouts Workout[]
+
+  @@map("users")
+}
+
+// Stats untuk profile page
+model UserStats {
+  id             String @id @default(cuid())
+  user_id        String @unique
+  total_workouts Int    @default(0)
+  total_calories Int    @default(0)
+  streak_days    Int    @default(0)
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("user_stats")
+}
+
+// Workouts untuk workout page
+model Workout {
+  id        String   @id @default(cuid())
+  user_id   String
+  name      String
+  createdAt DateTime @default(now())
+
+  user            User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  Exercise        Exercise?         @relation(fields: [exerciseId], references: [id])
+  exerciseId      String?
+  WorkoutExercise WorkoutExercise[]
+
+  @@index([user_id])
+  @@map("workouts")
+}
+
+model Exercise {
+  id               String   @id @default(uuid())
+  exerciseApiId    String   @unique
+  name             String
+  imageUrl         String
+  videoUrl         String?
+  exerciseType     String
+  bodyParts        String[]
+  equipments       String[]
+  targetMuscles    String[]
+  secondaryMuscles String[]
+  keywords         String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workoutExercises Workout[]
+  WorkoutExercise  WorkoutExercise[]
+}
+
+model WorkoutExercise {
+  id         String @id @default(uuid())
+  workoutId  String
+  exerciseId String
+  sets       Int
+  reps       Int
+  rest       Int
+
+  workout  Workout  @relation(fields: [workoutId], references: [id])
+  exercise Exercise @relation(fields: [exerciseId], references: [id])
+}

@@ -1,3 +1,4 @@
+// controllers/auth.ts
 import { Request, Response } from "express";
 import { supabase } from "../supabase/client";
 export async function register(req: Request, res: Response) {
@@ -28,17 +29,28 @@ export async function login(req: Request, res: Response) {
   res.json({ message: "Login berhasil", session: data.session });
 }
 
+// LOGIN DENGAN GOOGLE (ID TOKEN)
 export async function googleVerify(req: Request, res: Response) {
-  const { token } = req.body; // idToken dari frontend
+  const { token } = req.body;
 
-  const { data, error } = await supabase.auth.signInWithIdToken({
-    provider: "google",
-    token: token,
-  });
-
-  if (error) {
-    return res.status(400).json({ error: error.message });
+  if (!token) {
+    return res.status(400).json({ error: "No token provided" });
   }
 
-  res.json({ message: "Login Google berhasil (Client Side)", session: data.session });
+  try {
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: "google",
+      token,
+    });
+
+    if (error) {
+      console.error("Supabase signInWithIdToken error:", error);
+      return res.status(400).json({ error: error.message || error });
+    }
+
+    return res.status(200).json({ message: "Login berhasil", session: data.session, user: data.user });
+  } catch (err) {
+    console.error("Server error (googleVerify):", err);
+    return res.status(500).json({ error: "Internal server error", detail: err });
+  }
 }

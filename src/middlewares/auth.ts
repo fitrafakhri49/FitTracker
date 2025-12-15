@@ -22,3 +22,18 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return res.status(500).json({ error: err.message });
   }
 }
+export function setSessionCookie(res: Response, accessToken: string, refreshToken: string) {
+  res.cookie('sb-access-token', accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 3600000, // 1 jam
+    sameSite: 'strict'
+  });
+  
+  res.cookie('sb-refresh-token', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 604800000, // 7 hari
+    sameSite: 'strict'
+  });
+}
