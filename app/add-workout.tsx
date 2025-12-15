@@ -1,8 +1,13 @@
 import { FontAwesome5 } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { useNavigation, useRouter } from "expo-router";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -18,16 +23,9 @@ import {
 
 export default function AddWorkoutScreen() {
   const router = useRouter();
-  const [selectedExercises, setSelectedExercises] = useState<
-    {
-      exerciseId: string;
-      name: string;
-      sets: number;
-      reps: number;
-      rest: number;
-    }[]
-  >([]);
+  const navigation = useNavigation();
 
+  const [selectedExercises, setSelectedExercises] = useState<any[]>([]);
   const [workoutName, setWorkoutName] = useState("");
   const [exercisesList, setExercisesList] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -69,7 +67,6 @@ export default function AddWorkoutScreen() {
     }
   };
 
-  // Debounced version of search
   const debouncedFetch = useCallback(
     debounce((text: string) => {
       fetchExercises(1, text);
@@ -80,6 +77,48 @@ export default function AddWorkoutScreen() {
   useEffect(() => {
     fetchExercises();
   }, []);
+
+  // Fungsi addWorkout
+  const addWorkout = async () => {
+    if (!workoutName || selectedExercises.length === 0) {
+      Alert.alert("Error", "Please enter workout name and select exercises");
+      return;
+    }
+    try {
+      const sessionStr = await AsyncStorage.getItem("sb-session");
+      const session = sessionStr ? JSON.parse(sessionStr) : null;
+
+      const payload = {
+        name: workoutName,
+        exercises: selectedExercises.map((ex) => ({
+          exerciseId: ex.exerciseId,
+          sets: ex.sets,
+          reps: ex.reps,
+          rest: ex.rest,
+        })),
+      };
+
+      await axios.post("http://192.168.18.247:3000/api/v1/workouts", payload, {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+
+      router.back();
+    } catch (err: any) {
+      console.error(err.response?.data || err.message);
+      Alert.alert("Error", "Failed to add workout");
+    }
+  };
+
+  // Tombol Add Workout di header
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity style={{ marginRight: 15 }} onPress={addWorkout}>
+          <FontAwesome5 name="plus" size={20} color="#1D24CA" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, selectedExercises, workoutName]);
 
   const toggleExercise = (exercise: any) => {
     const exists = selectedExercises.find(
@@ -109,36 +148,6 @@ export default function AddWorkoutScreen() {
         ex.exerciseId === exerciseId ? { ...ex, [field]: value } : ex
       )
     );
-  };
-
-  const addWorkout = async () => {
-    if (!workoutName || selectedExercises.length === 0) {
-      Alert.alert("Error", "Please enter workout name and select exercises");
-      return;
-    }
-    try {
-      const sessionStr = await AsyncStorage.getItem("sb-session");
-      const session = sessionStr ? JSON.parse(sessionStr) : null;
-
-      const payload = {
-        name: workoutName,
-        exercises: selectedExercises.map((ex) => ({
-          exerciseId: ex.exerciseId,
-          sets: ex.sets,
-          reps: ex.reps,
-          rest: ex.rest,
-        })),
-      };
-
-      await axios.post("http://192.168.18.247:3000/api/v1/workouts", payload, {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
-
-      router.back();
-    } catch (err: any) {
-      console.error(err.response?.data || err.message);
-      Alert.alert("Error", "Failed to add workout");
-    }
   };
 
   const loadMore = () => {
@@ -283,16 +292,11 @@ export default function AddWorkoutScreen() {
           </View>
         </View>
       ))}
-
-      <TouchableOpacity style={styles.addButton} onPress={addWorkout}>
-        <FontAwesome5 name="plus" size={16} color="#000" />
-        <Text style={styles.addButtonText}>Add Workout</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
 
-// Styles tetap sama seperti sebelumnya
+// Styles sama seperti sebelumnya
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000" },
   label: { color: "#FFF", fontWeight: "700", marginBottom: 10 },
@@ -375,15 +379,4 @@ const styles = StyleSheet.create({
     color: "#FFF",
     textAlign: "center",
   },
-  addButton: {
-    marginTop: 30,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 15,
-    borderRadius: 12,
-    backgroundColor: "#1D24CA",
-    gap: 10,
-  },
-  addButtonText: { color: "#000", fontWeight: "900" },
 });

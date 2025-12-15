@@ -213,37 +213,6 @@ export default function ProfileScreen() {
     },
   ];
 
-  const achievements = [
-    {
-      id: 1,
-      title: "First 10K",
-      icon: "running",
-      date: "Nov 15",
-      color: "#1D24CA",
-    },
-    {
-      id: 2,
-      title: "Gym Rat",
-      icon: "dumbbell",
-      date: "Dec 1",
-      color: "#FF6B6B",
-    },
-    {
-      id: 3,
-      title: "Early Bird",
-      icon: "sun",
-      date: "Dec 5",
-      color: "#FFD700",
-    },
-    {
-      id: 4,
-      title: "Cardio King",
-      icon: "heartbeat",
-      date: "Dec 10",
-      color: "#4ECDC4",
-    },
-  ];
-
   const settingsOptions = [
     { id: 1, title: "Edit Profile", icon: "user-edit", color: "#1D24CA" },
     { id: 2, title: "Workout Plans", icon: "clipboard-list", color: "#FF6B6B" },
@@ -450,36 +419,6 @@ export default function ProfileScreen() {
           </View>
         ))}
       </View>
-
-      {/* Achievements */}
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.achievementsScroll}
-      >
-        {achievements.map((achievement) => (
-          <View key={achievement.id} style={styles.achievementCard}>
-            <View
-              style={[
-                styles.achievementIconContainer,
-                { backgroundColor: `${achievement.color}20` },
-              ]}
-            >
-              <FontAwesome5
-                name={achievement.icon}
-                size={24}
-                color={achievement.color}
-              />
-            </View>
-            <Text style={styles.achievementTitle}>{achievement.title}</Text>
-            <Text style={styles.achievementDate}>{achievement.date}</Text>
-            <View style={styles.achievementBadge}>
-              <FontAwesome5 name="trophy" size={10} color="#FFD700" />
-            </View>
-          </View>
-        ))}
-      </ScrollView>
 
       {/* Settings */}
       <Text style={styles.sectionTitle}>SETTINGS</Text>

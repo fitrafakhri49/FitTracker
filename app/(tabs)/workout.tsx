@@ -516,50 +516,6 @@ export default function WorkoutScreen() {
         </View>
       </Animated.View>
 
-      {/* Categories Filter */}
-      <Text style={styles.sectionTitle}>CATEGORIES</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoriesScroll}
-      >
-        {workoutCategories.map((category) => (
-          <TouchableOpacity
-            key={category.id}
-            style={[
-              styles.categoryButton,
-              category.active && styles.categoryButtonActive,
-            ]}
-            activeOpacity={0.7}
-          >
-            <View
-              style={[
-                styles.categoryIconContainer,
-                {
-                  backgroundColor: `${category.color}${
-                    category.active ? "40" : "20"
-                  }`,
-                },
-              ]}
-            >
-              <FontAwesome5
-                name={category.icon}
-                size={18}
-                color={category.active ? "#FFF" : category.color}
-              />
-            </View>
-            <Text
-              style={[
-                styles.categoryText,
-                category.active && styles.categoryTextActive,
-              ]}
-            >
-              {category.title}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
       {/* Filter Options */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>YOUR WORKOUTS</Text>
