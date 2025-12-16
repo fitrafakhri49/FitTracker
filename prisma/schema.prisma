@@ -95,6 +95,7 @@ model WorkoutHistory {
   workoutId String
   name      String
   createdAt DateTime @default(now())
+  duration  Int?
 
   WorkoutHistoryExercise WorkoutHistoryExercise[]
 }
