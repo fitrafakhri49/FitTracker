@@ -186,15 +186,10 @@ export async function createWorkout(req: Request, res: Response) {
       if (!id) {
         return res.status(400).json({ message: "Workout ID is required" });
       }
+        // Ambil durasi dari frontend (dalam detik)
+        const { duration } = req.body;
   
-      // Ambil durasi dari frontend (dalam detik)
-      const { duration } = req.body;
-      if (typeof duration !== "number") {
-        return res
-          .status(400)
-          .json({ message: "Duration (in seconds) is required" });
-      }
-  
+    
       // 1️⃣ Ambil workout + exercises
       const workout = await prisma.workout.findFirst({
         where: {
@@ -213,7 +208,8 @@ export async function createWorkout(req: Request, res: Response) {
       if (!workout) {
         return res.status(404).json({ message: "Workout not found" });
       }
-  
+
+
       // 2️⃣ Simpan ke history (TRANSACTION)
       const history = await prisma.$transaction(async (tx) => {
         // header history
@@ -222,7 +218,7 @@ export async function createWorkout(req: Request, res: Response) {
             user_id: user.id,
             workoutId: workout.id,
             name: workout.name,
-            duration, // pakai durasi dari frontend
+            duration
           },
         });
   
@@ -246,7 +242,7 @@ export async function createWorkout(req: Request, res: Response) {
       return res.status(201).json({
         success: true,
         message: "Workout history saved successfully",
-        data: history,
+        data: {history}
       });
     } catch (error: any) {
       console.error("Save workout history error:", error);
