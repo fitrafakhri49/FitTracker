@@ -14,7 +14,6 @@ import {
   View,
 } from "react-native";
 
-// Format number untuk calories (pindahkan ke atas)
 const formatNumber = (num: number) => {
   if (num >= 1000) {
     return `${(num / 1000).toFixed(1)}K`;
@@ -104,6 +103,15 @@ export default function FitnessDashboard() {
         hours: Math.floor(uniqueWorkout.size * 1.5),
       });
 
+      const formatDuration = (totalSeconds: number) => {
+        const hrs = Math.floor(totalSeconds / 3600);
+        const mins = Math.floor((totalSeconds % 3600) / 60);
+        const secs = totalSeconds % 60;
+        return [hrs, mins, secs]
+          .map((v) => v.toString().padStart(2, "0"))
+          .join(":");
+      };
+
       const mappedRecent = history.slice(0, 5).map((h: any) => ({
         id: h.WorkoutHistory?.id,
         name: h.WorkoutHistory?.name,
@@ -112,7 +120,7 @@ export default function FitnessDashboard() {
           { month: "short", day: "numeric" }
         ),
         type: h.exercise?.exerciseType || "Strength",
-        duration: h.WorkoutHistory?.duration || "—",
+        duration: formatDuration(h.WorkoutHistory?.duration || 0),
       }));
 
       setRecentWorkouts(mappedRecent);
@@ -245,7 +253,6 @@ export default function FitnessDashboard() {
 
   // Calculate streak days
   const calculateStreak = () => {
-    // Ini contoh sederhana, bisa diganti dengan logika yang lebih kompleks
     return userStats.workoutsCompleted > 20
       ? 7
       : userStats.workoutsCompleted > 10

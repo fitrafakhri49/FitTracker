@@ -59,6 +59,15 @@ export default function StartWorkoutScreen() {
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [showRestModal, setShowRestModal] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const formatSeconds = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  };
 
   // Timer interval
   useEffect(() => {
@@ -323,10 +332,15 @@ export default function StartWorkoutScreen() {
 
       const workoutIdStr = Array.isArray(workoutId) ? workoutId[0] : workoutId;
 
-      // 🔥 SIMPAN WORKOUT KE HISTORY
-      await axios.post(
+      // Hitung total duration dalam detik
+      const durationInSeconds =
+        timer.hours * 3600 + timer.minutes * 60 + timer.seconds;
+
+      const res = await axios.post(
         `http://192.168.18.247:3000/api/v1/workouts/${workoutIdStr}/history`,
-        {},
+        {
+          duration: durationInSeconds, // Kirim durasi ke backend
+        },
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -337,9 +351,15 @@ export default function StartWorkoutScreen() {
 
       setIsTimerRunning(false);
 
+      const durationSaved = res.data?.data?.duration;
+
       Alert.alert(
         "Workout Completed!",
-        `Great job!\nDuration: ${formatTime(timer)}`,
+        `Great job!\nDuration: ${
+          durationSaved !== undefined
+            ? `${durationSaved} sec`
+            : formatTime(timer) // fallback
+        }`,
         [
           {
             text: "Back to Workouts",
