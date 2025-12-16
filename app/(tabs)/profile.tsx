@@ -2,6 +2,7 @@
 import { supabase } from "@/lib/supabase";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -27,6 +28,8 @@ export default function ProfileScreen() {
     streakDays: 0,
     goalsCompleted: 0,
   });
+  const [backendWorkouts, setBackendWorkouts] = useState(0);
+
   const loadSession = async () => {
     try {
       const sessionStr = await AsyncStorage.getItem("sb-session");
@@ -40,7 +43,36 @@ export default function ProfileScreen() {
     }
     return null;
   };
+  const fetchBackendWorkouts = async (userId: string) => {
+    try {
+      // Ganti URL sesuai servermu
+      const response = await axios.get(
+        "http://192.168.18.247:3000/api/v1/workouts/history/exercises",
+        {
+          // Sertakan token jika menggunakan auth Bearer
+          headers: {
+            Authorization: `Bearer ${
+              (
+                await supabase.auth.getSession()
+              ).data.session?.access_token
+            }`,
+          },
+        }
+      );
 
+      if (response.data?.success) {
+        setBackendWorkouts(response.data.totalWorkouts || 0);
+
+        // Update userStats juga jika mau
+        setUserStats((prev) => ({
+          ...prev,
+          workoutsCompleted: response.data.totalWorkouts || 0,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching backend workouts:", error);
+    }
+  };
   // Fungsi untuk mendapatkan data user dari Supabase
   const fetchUserData = async () => {
     try {
@@ -111,6 +143,7 @@ export default function ProfileScreen() {
 
     // Ambil data stats
     await fetchUserStats(user.id);
+    await fetchBackendWorkouts(user.id);
   };
 
   // Fungsi untuk mengambil statistik user dari database

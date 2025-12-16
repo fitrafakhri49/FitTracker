@@ -60,15 +60,7 @@ export default function StartWorkoutScreen() {
   const [showRestModal, setShowRestModal] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const formatSeconds = (totalSeconds: number) => {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
 
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  };
   // Timer interval
   useEffect(() => {
     let interval: number | null = null;
@@ -364,7 +356,7 @@ export default function StartWorkoutScreen() {
         [
           {
             text: "Back to Workouts",
-            onPress: () => router.replace("/workout"),
+            onPress: () => router.replace("/(tabs)/home"),
           },
         ]
       );
@@ -564,17 +556,6 @@ export default function StartWorkoutScreen() {
                 </View>
               ))}
             </View>
-
-            {/* Rest Button */}
-            {exIdx < workout.exercises.length - 1 && (
-              <TouchableOpacity
-                style={styles.restButton}
-                onPress={() => startRestTimer(60)}
-              >
-                <MaterialIcons name="timer" size={16} color="#1D24CA" />
-                <Text style={styles.restButtonText}>Start Rest Timer</Text>
-              </TouchableOpacity>
-            )}
           </View>
         ))}
         <TouchableOpacity

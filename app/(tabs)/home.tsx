@@ -316,69 +316,9 @@ export default function FitnessDashboard() {
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header dengan efek sporty */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.logoBadge}
-          onPress={() => router.push("/profile")}
-          activeOpacity={0.7}
-        >
-          <FontAwesome5 name="dumbbell" size={32} color="#1D24CA" />
-        </TouchableOpacity>
-        <Text style={styles.title}>
-          FIT<Text style={styles.titleAccent}>TRACKER</Text>
-        </Text>
-        <Text style={styles.tagline}>PUSH YOUR LIMITS</Text>
-
-        {/* User info mini */}
-        <TouchableOpacity
-          style={styles.userInfoMini}
-          onPress={() => router.push("/profile")}
-          activeOpacity={0.7}
-        >
-          <View style={styles.userInfoContent}>
-            <FontAwesome5 name="user-circle" size={14} color="#1D24CA" />
-            <Text style={styles.userInfoText}>{userName}</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      {/* Stats Cards dengan animasi */}
-      <Animated.View
-        style={[
-          styles.statsContainer,
-          { transform: [{ translateY: cardTranslateY }] },
-        ]}
-      >
-        {stats.map((stat) => (
-          <TouchableOpacity
-            key={stat.id}
-            style={styles.statCard}
-            activeOpacity={0.7}
-            onPress={() => {
-              if (stat.id === 3) router.push("/profile");
-            }}
-          >
-            <View
-              style={[
-                styles.statIconContainer,
-                { backgroundColor: `${stat.color}20` },
-              ]}
-            >
-              <FontAwesome5 name={stat.icon} size={20} color={stat.color} />
-            </View>
-            <Text style={styles.statValue}>{stat.value}</Text>
-            <Text style={styles.statTitle}>{stat.title}</Text>
-          </TouchableOpacity>
-        ))}
-      </Animated.View>
-
       {/* Recent Workouts */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>RECENT WORKOUTS</Text>
-        <TouchableOpacity onPress={() => router.push("/profile")}>
-          <Text style={styles.seeAllText}>See All →</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.workoutsContainer}>
