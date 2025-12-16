@@ -312,32 +312,44 @@ export async function createWorkout(req: Request, res: Response) {
         return res.status(401).json({ message: "User not authenticated" });
       }
   
-      const historyExercises =
-        await prisma.workoutHistoryExercise.findMany({
-          where: {
-            WorkoutHistory: {
-              user_id: user.id,
-            },
-          },
-          include: {
-            WorkoutHistory: true,
-          },
-          orderBy: {
-            WorkoutHistory: {
-              createdAt: "desc",
-            },
-          },
-        });
+      // Ambil history workout beserta exercise-nya
+      const historyExercises = await prisma.workoutHistory.findMany({
+        where: {
+          user_id: user.id,
+        },
+        include: {
+          WorkoutHistoryExercise: true, // ambil semua exercise
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+  
+      // Format data agar lebih rapi untuk tabel
+      const formattedData = historyExercises.map((history) => ({
+        id: history.id,
+        workoutName: history.name,
+        createdAt: history.createdAt,
+        duration: history.duration ?? 0,
+        exercises: history.WorkoutHistoryExercise.map((ex) => ({
+          id: ex.id,
+          name: ex.name,
+          sets: ex.sets,
+          reps: ex.reps,
+          weight: ex.weight ?? 0,
+        })),
+      }));
   
       res.status(200).json({
         success: true,
-        data: historyExercises,
+        data: formattedData,
       });
     } catch (error: any) {
       console.error("Get workout history error:", error);
       res.status(500).json({ message: error.message });
     }
   }
+  
   
 
 
