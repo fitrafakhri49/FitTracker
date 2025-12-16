@@ -339,9 +339,11 @@ export async function createWorkout(req: Request, res: Response) {
           weight: ex.weight ?? 0,
         })),
       }));
-  
+      const totalWorkouts = formattedData.length;
+
       res.status(200).json({
         success: true,
+        totalWorkouts,
         data: formattedData,
       });
     } catch (error: any) {
