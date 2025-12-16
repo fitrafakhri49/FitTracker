@@ -33,6 +33,7 @@ export default function FitnessDashboard() {
     hours: 0,
   });
   const [recentWorkouts, setRecentWorkouts] = useState<any[]>([]);
+  const [hasFetched, setHasFetched] = useState(false);
 
   // Animasi untuk cards
   const [cardAnim] = useState(new Animated.Value(0));
@@ -200,18 +201,18 @@ export default function FitnessDashboard() {
   // Set user data dari session
   const setUserData = async (session: any) => {
     const user = session.user;
-
-    // Set user name dan email
     setUserName(
       user.user_metadata?.full_name || user.email?.split("@")[0] || "User"
     );
     setUserEmail(user.email || "");
 
-    // Ambil data stats user
     await fetchUserStats(user.id);
-    await fetchWorkoutHistory();
-  };
 
+    if (!hasFetched) {
+      setHasFetched(true);
+      await fetchWorkoutHistory();
+    }
+  };
   // Ambil data stats user
   const fetchUserStats = async (userId: string) => {
     try {
@@ -305,18 +306,6 @@ export default function FitnessDashboard() {
     outputRange: [50, 0],
   });
 
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (!error) {
-      await AsyncStorage.multiRemove([
-        "sb-session",
-        "sb-access-token",
-        "sb-refresh-token",
-      ]);
-      router.replace("/login");
-    }
-  };
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -359,41 +348,6 @@ export default function FitnessDashboard() {
         </TouchableOpacity>
       </View>
 
-      {/* Welcome Section */}
-      <View style={styles.welcomeCard}>
-        <View style={styles.welcomeHeader}>
-          <MaterialIcons name="emoji-events" size={24} color="#FFD700" />
-          <Text style={styles.welcomeTitle}>
-            {greeting}, {userName}!
-          </Text>
-          <TouchableOpacity style={styles.logoutMini} onPress={handleLogout}>
-            <MaterialIcons name="logout" size={16} color="#FF6B6B" />
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.welcomeSubtitle}>
-          {userEmail ? `Logged in as ${userEmail}` : "Welcome to FitTracker!"}
-        </Text>
-        <Text style={styles.welcomeSubtitle}>
-          Your performance is trending up! Keep pushing! 💪
-        </Text>
-        <View style={styles.statsRow}>
-          <View style={styles.statMini}>
-            <FontAwesome5 name="chart-line" size={12} color="#00FF00" />
-            <Text style={styles.statMiniText}>
-              {userStats.workoutsCompleted > 0
-                ? "+12% this week"
-                : "Start your first workout!"}
-            </Text>
-          </View>
-          <View style={styles.statMini}>
-            <FontAwesome5 name="trophy" size={12} color="#FFD700" />
-            <Text style={styles.statMiniText}>
-              {calculateStreak()} day streak
-            </Text>
-          </View>
-        </View>
-      </View>
-
       {/* Stats Cards dengan animasi */}
       <Animated.View
         style={[
@@ -433,9 +387,9 @@ export default function FitnessDashboard() {
       </View>
 
       <View style={styles.workoutsContainer}>
-        {recentWorkouts.map((workout) => (
+        {recentWorkouts.map((workout, index) => (
           <TouchableOpacity
-            key={workout.id}
+            key={`${workout.id}-${index}`} // pastikan key unik
             style={styles.workoutCard}
             activeOpacity={0.7}
             onPress={() =>
@@ -468,47 +422,6 @@ export default function FitnessDashboard() {
             </View>
           </TouchableOpacity>
         ))}
-
-        {/* Empty state jika tidak ada workout */}
-        {userStats.workoutsCompleted === 0 && (
-          <View style={styles.emptyWorkoutCard}>
-            <FontAwesome5 name="dumbbell" size={32} color="#666" />
-            <Text style={styles.emptyWorkoutText}>No workouts yet</Text>
-            <TouchableOpacity
-              style={styles.startWorkoutButton}
-              onPress={() => console.log("Start first workout")}
-            >
-              <Text style={styles.startWorkoutText}>
-                START YOUR FIRST WORKOUT
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-
-      {/* Today's Goal */}
-      <View style={styles.goalCard}>
-        <View style={styles.goalHeader}>
-          <FontAwesome5 name="bullseye" size={20} color="#1D24CA" />
-          <Text style={styles.goalTitle}>TODAY'S GOAL</Text>
-        </View>
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: `${Math.min(userStats.workoutsCompleted * 5, 100)}%` },
-              ]}
-            />
-          </View>
-          <Text style={styles.progressText}>
-            {Math.min(userStats.workoutsCompleted * 5, 100)}% Complete
-          </Text>
-        </View>
-        <Text style={styles.goalDescription}>
-          Target: {userStats.caloriesBurned}/2,000 calories burned • 10,000
-          steps
-        </Text>
       </View>
 
       {/* Footer */}

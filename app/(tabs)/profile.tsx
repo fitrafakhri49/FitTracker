@@ -116,46 +116,32 @@ export default function ProfileScreen() {
   // Fungsi untuk mengambil statistik user dari database
   const fetchUserStats = async (userId: string) => {
     try {
-      // Contoh: Ambil data dari tabel 'user_stats'
-      const { data, error } = await supabase
-        .from("user_stats")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
-      if (error && error.code !== "PGRST116") {
-        // PGRST116 = no rows returned
-        console.error("Error fetching user stats:", error);
-      }
-
-      if (data) {
-        setUserStats({
-          workoutsCompleted: data.total_workouts || 0,
-          caloriesBurned: data.total_calories || 0,
-          streakDays: data.current_streak || 0,
-          goalsCompleted: data.goals_completed || 0,
-        });
-      }
-
-      // Jika tidak ada data stats, coba hitung dari tabel workouts
+      // Ambil semua workout user dari tabel 'workouts'
       const { data: workoutsData, error: workoutsError } = await supabase
         .from("workouts")
         .select("*")
         .eq("user_id", userId);
 
-      if (!workoutsError && workoutsData) {
-        const totalWorkouts = workoutsData.length;
-        const totalCalories = workoutsData.reduce(
+      if (workoutsError) {
+        console.error("Error fetching workouts:", workoutsError);
+      }
+
+      const totalWorkouts = workoutsData?.length || 0;
+      const totalCalories =
+        workoutsData?.reduce(
           (sum, workout) => sum + (workout.calories_burned || 0),
           0
-        );
+        ) || 0;
 
-        setUserStats((prev) => ({
-          ...prev,
-          workoutsCompleted: prev.workoutsCompleted || totalWorkouts,
-          caloriesBurned: prev.caloriesBurned || totalCalories,
-        }));
-      }
+      // Update userStats dengan total workout history
+      setUserStats((prev) => ({
+        ...prev,
+        workoutsCompleted: totalWorkouts, // total workout history
+        caloriesBurned: totalCalories,
+        // Biarkan streakDays dan goalsCompleted tetap dari user_stats
+        streakDays: prev.streakDays,
+        goalsCompleted: prev.goalsCompleted,
+      }));
     } catch (error) {
       console.error("Error in fetchUserStats:", error);
     }

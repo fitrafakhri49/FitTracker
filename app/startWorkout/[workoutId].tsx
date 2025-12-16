@@ -59,6 +59,7 @@ export default function StartWorkoutScreen() {
   const [restTimer, setRestTimer] = useState<number | null>(null);
   const [showRestModal, setShowRestModal] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const formatSeconds = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -68,7 +69,6 @@ export default function StartWorkoutScreen() {
       .toString()
       .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
-
   // Timer interval
   useEffect(() => {
     let interval: number | null = null;
@@ -320,6 +320,10 @@ export default function StartWorkoutScreen() {
   };
 
   const finishWorkout = async () => {
+    if (isSubmitting) return; // cegah klik ganda
+
+    setIsSubmitting(true);
+
     try {
       const sessionStr = await AsyncStorage.getItem("sb-session");
       const session = sessionStr ? JSON.parse(sessionStr) : null;
@@ -327,20 +331,17 @@ export default function StartWorkoutScreen() {
 
       if (!accessToken || !workoutId) {
         Alert.alert("Error", "Authentication error");
+        setIsSubmitting(false);
         return;
       }
 
       const workoutIdStr = Array.isArray(workoutId) ? workoutId[0] : workoutId;
-
-      // Hitung total duration dalam detik
       const durationInSeconds =
         timer.hours * 3600 + timer.minutes * 60 + timer.seconds;
 
       const res = await axios.post(
         `http://192.168.18.247:3000/api/v1/workouts/${workoutIdStr}/history`,
-        {
-          duration: durationInSeconds, // Kirim durasi ke backend
-        },
+        { duration: durationInSeconds },
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -358,7 +359,7 @@ export default function StartWorkoutScreen() {
         `Great job!\nDuration: ${
           durationSaved !== undefined
             ? `${durationSaved} sec`
-            : formatTime(timer) // fallback
+            : formatTime(timer)
         }`,
         [
           {
@@ -370,6 +371,7 @@ export default function StartWorkoutScreen() {
     } catch (err) {
       console.error("Error saving workout history:", err);
       Alert.alert("Error", "Failed to save workout history. Please try again.");
+      setIsSubmitting(false);
     }
   };
 
@@ -575,9 +577,14 @@ export default function StartWorkoutScreen() {
             )}
           </View>
         ))}
-
-        <TouchableOpacity style={styles.finishButton} onPress={finishWorkout}>
-          <Text style={styles.finishText}>Finish Workout</Text>
+        <TouchableOpacity
+          style={[styles.finishButton, isSubmitting && { opacity: 0.6 }]}
+          onPress={finishWorkout}
+          disabled={isSubmitting}
+        >
+          <Text style={styles.finishText}>
+            {isSubmitting ? "Submitting..." : "Finish Workout"}
+          </Text>
           <MaterialIcons name="done-all" size={20} color="#FFF" />
         </TouchableOpacity>
       </ScrollView>
