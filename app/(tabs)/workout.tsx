@@ -314,112 +314,6 @@ export default function WorkoutScreen() {
         />
       }
     >
-      {/* Header dengan efek sporty */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.logoBadge}
-          onPress={() => router.push("/home")}
-          activeOpacity={0.7}
-        >
-          <FontAwesome5 name="dumbbell" size={32} color="#1D24CA" />
-        </TouchableOpacity>
-        <Text style={styles.title}>
-          WORKOUT<Text style={styles.titleAccent}>HISTORY</Text>
-        </Text>
-        <Text style={styles.tagline}>TRACK YOUR PROGRESS</Text>
-      </View>
-
-      {/* Stats Overview */}
-      <Animated.View
-        style={[
-          styles.statsOverview,
-          { transform: [{ translateY: cardTranslateY }] },
-        ]}
-      >
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <View
-              style={[
-                styles.statIconContainer,
-                { backgroundColor: "#1D24CA20" },
-              ]}
-            >
-              <FontAwesome5 name="calendar-check" size={20} color="#1D24CA" />
-            </View>
-            <Text style={styles.statValue}>{stats.totalWorkouts}</Text>
-            <Text style={styles.statTitle}>Total Workouts</Text>
-          </View>
-          <View style={styles.statCard}>
-            <View
-              style={[
-                styles.statIconContainer,
-                { backgroundColor: "#FF6B6B20" },
-              ]}
-            >
-              <FontAwesome5 name="clock" size={20} color="#FF6B6B" />
-            </View>
-            <Text style={styles.statValue}>
-              {formatDuration(stats.totalDuration)}
-            </Text>
-            <Text style={styles.statTitle}>Total Time</Text>
-          </View>
-        </View>
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <View
-              style={[
-                styles.statIconContainer,
-                { backgroundColor: "#4ECDC420" },
-              ]}
-            >
-              <FontAwesome5 name="fire" size={20} color="#4ECDC4" />
-            </View>
-            <Text style={styles.statValue}>
-              {stats.totalCalories >= 1000
-                ? `${(stats.totalCalories / 1000).toFixed(1)}K`
-                : stats.totalCalories}
-            </Text>
-            <Text style={styles.statTitle}>Calories Burned</Text>
-          </View>
-          <View style={styles.statCard}>
-            <View
-              style={[
-                styles.statIconContainer,
-                { backgroundColor: "#FFD70020" },
-              ]}
-            >
-              <FontAwesome5 name="chart-line" size={20} color="#FFD700" />
-            </View>
-            <Text style={styles.statValue}>
-              {formatDuration(stats.avgDuration)}
-            </Text>
-            <Text style={styles.statTitle}>Avg Duration</Text>
-          </View>
-        </View>
-      </Animated.View>
-
-      {/* Filter Options */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>YOUR WORKOUTS</Text>
-        <TouchableOpacity style={styles.filterButton}>
-          <FontAwesome5 name="filter" size={14} color="#1D24CA" />
-          <Text style={styles.filterText}>Filter</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.filterOptions}>
-        {filterOptions.map((option) => (
-          <TouchableOpacity
-            key={option.id}
-            style={styles.filterOption}
-            activeOpacity={0.7}
-          >
-            <FontAwesome5 name={option.icon} size={14} color="#888" />
-            <Text style={styles.filterOptionText}>{option.title}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
       {/* Workouts List */}
       <View style={styles.workoutsList}>
         {workouts.length > 0 ? (
@@ -550,7 +444,7 @@ export default function WorkoutScreen() {
       <TouchableOpacity
         style={styles.addWorkoutButton}
         activeOpacity={0.7}
-        onPress={() => router.push("/add-workout")}
+        onPress={() => router.push("/addWorkout/add-workout")}
       >
         <View style={styles.addButtonIcon}>
           <FontAwesome5 name="plus" size={20} color="#000" />
