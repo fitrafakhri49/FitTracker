@@ -1,4 +1,3 @@
-import { FontAwesome5 } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -102,11 +101,6 @@ export default function WorkoutHistoryDetail() {
           </View>
         </View>
       ))}
-
-      <TouchableOpacity style={styles.saveBtn}>
-        <FontAwesome5 name="save" size={14} color="#000" />
-        <Text style={styles.saveText}>SAVE WORKOUT</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -128,17 +122,4 @@ const styles = StyleSheet.create({
   exerciseName: { color: "#FFF", fontSize: 16, fontWeight: "700" },
   row: { flexDirection: "row", gap: 12, marginTop: 8 },
   meta: { color: "#AAA", fontSize: 12 },
-  saveBtn: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 10,
-    backgroundColor: "#1D24CA",
-    padding: 14,
-    borderRadius: 30,
-    marginTop: 30,
-  },
-  saveText: {
-    fontWeight: "900",
-    letterSpacing: 1,
-  },
 });

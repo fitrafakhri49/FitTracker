@@ -2,6 +2,7 @@
 import { supabase } from "@/lib/supabase";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -13,7 +14,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
 const formatNumber = (num: number) => {
   if (num >= 1000) {
     return `${(num / 1000).toFixed(1)}K`;
@@ -62,7 +62,6 @@ export default function FitnessDashboard() {
       color: "#4ECDC4",
     },
   ];
-
   const fetchWorkoutHistory = async () => {
     try {
       const sessionStr = await AsyncStorage.getItem("sb-session");
@@ -71,30 +70,32 @@ export default function FitnessDashboard() {
       const session = JSON.parse(sessionStr);
       const accessToken = session.access_token;
 
-      const res = await fetch(
+      const res = await axios.get(
         "http://192.168.18.247:3000/api/v1/workouts/history/exercises",
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
+          timeout: 10000,
         }
       );
 
-      const json = await res.json();
+      const json = res.data;
       if (!json.success) return;
 
       const history = json.data;
 
-      // =========================
       // HITUNG STATS DARI HISTORY
-      // =========================
-      const uniqueWorkout = new Set(
-        history.map((h: any) => h.WorkoutHistory?.id)
-      );
+      const uniqueWorkout = new Set(history.map((h: any) => h.id));
 
       const totalCalories = history.reduce(
-        (sum: number, h: any) => sum + (h.calories || 0),
+        (sum: number, h: any) =>
+          sum +
+          (h.exercises?.reduce(
+            (s: number, ex: any) => s + (ex.calories || 0),
+            0
+          ) || 0),
         0
       );
 
@@ -114,19 +115,22 @@ export default function FitnessDashboard() {
       };
 
       const mappedRecent = history.slice(0, 5).map((h: any) => ({
-        id: h.WorkoutHistory?.id,
-        name: h.WorkoutHistory?.name,
-        date: new Date(h.WorkoutHistory?.createdAt).toLocaleDateString(
-          "en-US",
-          { month: "short", day: "numeric" }
-        ),
-        type: h.exercise?.exerciseType || "Strength",
-        duration: formatDuration(h.WorkoutHistory?.duration || 0),
+        id: h.id,
+        name: h.workoutName,
+        date: new Date(h.createdAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        type: h.exercises[0]?.type || "Strength", // misal ambil type dari exercise pertama
+        duration: formatDuration(h.duration || 0),
       }));
 
       setRecentWorkouts(mappedRecent);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Fetch workout history error:", err);
+      if (err.response) {
+        console.error("Response error:", err.response.data);
+      }
     }
   };
 
@@ -253,15 +257,6 @@ export default function FitnessDashboard() {
   };
 
   // Calculate streak days
-  const calculateStreak = () => {
-    return userStats.workoutsCompleted > 20
-      ? 7
-      : userStats.workoutsCompleted > 10
-      ? 3
-      : userStats.workoutsCompleted > 0
-      ? 1
-      : 0;
-  };
 
   useEffect(() => {
     checkAuth();
@@ -387,9 +382,9 @@ export default function FitnessDashboard() {
       </View>
 
       <View style={styles.workoutsContainer}>
-        {recentWorkouts.map((workout, index) => (
+        {recentWorkouts.map((workout) => (
           <TouchableOpacity
-            key={`${workout.id}-${index}`} // pastikan key unik
+            key={`${workout.id}`} // pastikan key unik
             style={styles.workoutCard}
             activeOpacity={0.7}
             onPress={() =>
