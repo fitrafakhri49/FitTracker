@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 interface Workout {
   id: string;
   name: string;
@@ -19,11 +20,11 @@ interface Workout {
 
 export default function AddPlanWorkoutScreen() {
   const { addPlan } = useWorkoutPlans();
-
   const router = useRouter();
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [selectedWorkout, setSelectedWorkout] = useState<string | null>(null);
   const [date, setDate] = useState(new Date());
+  const [showPicker, setShowPicker] = useState(false); // kontrol visibilitas picker
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,16 +52,11 @@ export default function AddPlanWorkoutScreen() {
 
     const res = await axios.post(
       "http://192.168.18.247:3000/api/v1/plan",
-      {
-        workoutId: selectedWorkout,
-        date,
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
+      { workoutId: selectedWorkout, date },
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    addPlan(res.data.data); // ⬅️ langsung masuk list
+    addPlan(res.data.data); // langsung masuk list
     router.replace("/(tabs)/planWorkout");
   };
 
@@ -87,17 +83,38 @@ export default function AddPlanWorkoutScreen() {
             ]}
             onPress={() => setSelectedWorkout(item.id)}
           >
-            <Text>{item.name}</Text>
+            <Text style={styles.workoutItemText}>{item.name}</Text>
           </TouchableOpacity>
         )}
       />
 
       <Text style={styles.title}>Pilih Tanggal</Text>
-      <DateTimePicker
-        value={date}
-        mode="date"
-        onChange={(_: any, d: any) => d && setDate(d)}
-      />
+
+      <TouchableOpacity
+        style={styles.dateButton}
+        onPress={() => setShowPicker(true)}
+      >
+        <Text style={styles.dateButtonText}>
+          {date.toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </Text>
+      </TouchableOpacity>
+
+      {showPicker && (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display="default"
+          onChange={(_, d) => {
+            if (d) setDate(d);
+            setShowPicker(false); // hide picker setelah pilih
+          }}
+        />
+      )}
 
       <TouchableOpacity
         style={styles.submit}
@@ -111,22 +128,36 @@ export default function AddPlanWorkoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, flex: 1 },
+  container: { padding: 16, flex: 1, backgroundColor: "#000" }, // background gelap
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontSize: 16, fontWeight: "bold", marginVertical: 10 },
+  title: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginVertical: 10,
+    color: "#FFF",
+  }, // putih
   workoutItem: {
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#555",
     marginBottom: 8,
   },
-  selected: { backgroundColor: "#ddd" },
+  selected: { backgroundColor: "#1D24CA" }, // highlight biru
+  workoutItemText: { color: "#FFF" }, // teks putih
+  dateButton: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#555",
+    marginBottom: 10,
+  },
+  dateButtonText: { fontSize: 16, color: "#FFF" }, // teks putih
   submit: {
-    backgroundColor: "#000",
+    backgroundColor: "#1D24CA", // biru
     padding: 14,
     borderRadius: 10,
     marginTop: 20,
   },
-  submitText: { color: "#fff", textAlign: "center", fontWeight: "600" },
+  submitText: { color: "#FFF", textAlign: "center", fontWeight: "600" },
 });

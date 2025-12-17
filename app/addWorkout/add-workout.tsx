@@ -120,10 +120,17 @@ export default function AddWorkoutScreen() {
           ))}
         </View>
       ))}
+      <TouchableOpacity
+        style={styles.saveBtn}
+        onPress={addWorkout}
+        disabled={selectedExercises.length === 0 || !workoutName}
+      >
+        <Text style={styles.saveBtnText}>Save Workout</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
-// Styles sama seperti sebelumnya
+// Styles sama seperti s
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000" },
   label: { color: "#FFF", fontWeight: "700", marginBottom: 10 },
@@ -225,5 +232,17 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontWeight: "700",
     fontSize: 16,
+  },
+  saveBtn: {
+    backgroundColor: "#1D24CA",
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginTop: 20,
+    alignItems: "center",
+  },
+  saveBtnText: {
+    color: "#FFF",
+    fontSize: 18,
+    fontWeight: "700",
   },
 });
