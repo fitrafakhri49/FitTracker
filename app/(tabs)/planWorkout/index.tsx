@@ -1,4 +1,3 @@
-// app/(tabs)/planWorkout/index.tsx
 import { useWorkoutPlans } from "@/context/workoutPlancontext";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,6 +11,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+import { schedulePushNotification } from "@/utils/notification"; // import fungsi notifikasi
 
 export default function PlanWorkoutList() {
   const { plans, loading, fetchPlans } = useWorkoutPlans();
@@ -52,12 +53,29 @@ export default function PlanWorkoutList() {
     <LinearGradient colors={["#000", "#0A0A0A"]} style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Your Workout Plans</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => router.push("/planWorkout/add")}
-        >
-          <MaterialIcons name="add" size={28} color="#FFF" />
-        </TouchableOpacity>
+
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          {/* Tombol add plan */}
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => router.push("/planWorkout/add")}
+          >
+            <MaterialIcons name="add" size={28} color="#FFF" />
+          </TouchableOpacity>
+
+          {/* Tombol test notification */}
+          <TouchableOpacity
+            style={[styles.addButton, { backgroundColor: "#28A745" }]}
+            onPress={() =>
+              schedulePushNotification(
+                "Test Notification 🏋️",
+                "This is a test notification from PlanWorkout screen"
+              )
+            }
+          >
+            <MaterialIcons name="notifications" size={28} color="#FFF" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {plans.length === 0 ? (

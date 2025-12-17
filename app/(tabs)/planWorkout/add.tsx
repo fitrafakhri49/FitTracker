@@ -1,4 +1,5 @@
 import { useWorkoutPlans } from "@/context/workoutPlancontext";
+import { schedulePushNotification } from "@/utils/notification";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import axios from "axios";
@@ -30,6 +31,9 @@ export default function AddPlanWorkoutScreen() {
   useEffect(() => {
     fetchWorkouts();
   }, []);
+  useEffect(() => {
+    fetchWorkouts();
+  }, []);
 
   const fetchWorkouts = async () => {
     const raw = await AsyncStorage.getItem("sb-session");
@@ -57,6 +61,16 @@ export default function AddPlanWorkoutScreen() {
     );
 
     addPlan(res.data.data); // langsung masuk list
+    const now = new Date();
+    const selectedDate = new Date(date);
+    let seconds = Math.floor((selectedDate.getTime() - now.getTime()) / 1000);
+    if (seconds <= 0) seconds = 1; // jika waktu di masa lalu, jadwalkan 1 detik lagi
+    await schedulePushNotification(
+      "Workout Reminder 🏋️",
+      `Time to do your workout: ${res.data.data.workout.name}`,
+      { workoutId: selectedWorkout },
+      seconds
+    );
     router.replace("/(tabs)/planWorkout");
   };
 
@@ -111,7 +125,7 @@ export default function AddPlanWorkoutScreen() {
           display="default"
           onChange={(_, d) => {
             if (d) setDate(d);
-            setShowPicker(false); // hide picker setelah pilih
+            setShowPicker(false);
           }}
         />
       )}
@@ -128,14 +142,14 @@ export default function AddPlanWorkoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, flex: 1, backgroundColor: "#000" }, // background gelap
+  container: { flex: 1, padding: 16, backgroundColor: "#000" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   title: {
     fontSize: 16,
     fontWeight: "bold",
     marginVertical: 10,
     color: "#FFF",
-  }, // putih
+  },
   workoutItem: {
     padding: 12,
     borderRadius: 8,
@@ -143,8 +157,8 @@ const styles = StyleSheet.create({
     borderColor: "#555",
     marginBottom: 8,
   },
-  selected: { backgroundColor: "#1D24CA" }, // highlight biru
-  workoutItemText: { color: "#FFF" }, // teks putih
+  selected: { backgroundColor: "#1D24CA" },
+  workoutItemText: { color: "#FFF" },
   dateButton: {
     padding: 12,
     borderRadius: 8,
@@ -152,9 +166,9 @@ const styles = StyleSheet.create({
     borderColor: "#555",
     marginBottom: 10,
   },
-  dateButtonText: { fontSize: 16, color: "#FFF" }, // teks putih
+  dateButtonText: { fontSize: 16, color: "#FFF" },
   submit: {
-    backgroundColor: "#1D24CA", // biru
+    backgroundColor: "#1D24CA",
     padding: 14,
     borderRadius: 10,
     marginTop: 20,

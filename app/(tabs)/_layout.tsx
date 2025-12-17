@@ -32,7 +32,7 @@ export default function TabLayout() {
         options={{
           title: "Workout",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="fitness" size={28} color={color} />
+            <Ionicons name="barbell" size={28} color={color} />
           ),
         }}
       />
@@ -47,11 +47,20 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="planWorkout/index"
+        name="planWorkout"
         options={{
-          title: "planWorkout",
+          title: "Workout Plan",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="person" size={28} color={color} />
+            <Ionicons name="calendar" size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="planWorkout/add"
+        options={{
+          title: "Add Plan",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="add" size={28} color={color} />
           ),
         }}
       />
