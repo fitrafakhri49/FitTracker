@@ -5,7 +5,7 @@ import { Stack } from "expo-router";
 export default function Layout() {
   return (
     <WorkoutProvider>
-      <Stack />
+      <Stack screenOptions={{ headerShown: false }} />
     </WorkoutProvider>
   );
 }

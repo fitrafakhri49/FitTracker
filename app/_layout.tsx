@@ -1,3 +1,5 @@
+import { WorkoutProvider } from "@/context/WorkoutContext";
+import { WorkoutPlanProvider } from "@/context/workoutPlancontext";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   DarkTheme,
@@ -17,10 +19,14 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
-      <StatusBar style="auto" />
+      <WorkoutProvider>
+        <WorkoutPlanProvider>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+          <StatusBar style="auto" />
+        </WorkoutPlanProvider>
+      </WorkoutProvider>
     </ThemeProvider>
   );
 }
