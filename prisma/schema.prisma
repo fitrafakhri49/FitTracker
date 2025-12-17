@@ -14,20 +14,19 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// User utama
 model User {
   id         String  @id @default(cuid())
   email      String  @unique
   name       String?
   avatar_url String?
 
-  stats    UserStats?
-  workouts Workout[]
+  stats       UserStats?
+  workouts    Workout[]
+  WorkoutPlan WorkoutPlan[]
 
   @@map("users")
 }
 
-// Stats untuk profile page
 model UserStats {
   id             String @id @default(cuid())
   user_id        String @unique
@@ -40,7 +39,6 @@ model UserStats {
   @@map("user_stats")
 }
 
-// Workouts untuk workout page
 model Workout {
   id        String   @id @default(cuid())
   user_id   String
@@ -51,6 +49,7 @@ model Workout {
   Exercise        Exercise?         @relation(fields: [exerciseId], references: [id])
   exerciseId      String?
   WorkoutExercise WorkoutExercise[]
+  WorkoutPlan     WorkoutPlan[]
 
   @@index([user_id])
   @@map("workouts")
@@ -109,4 +108,15 @@ model WorkoutHistoryExercise {
   reps             Int
   weight           Float?
   WorkoutHistory   WorkoutHistory @relation(fields: [workoutHistoryId], references: [id])
+}
+
+model WorkoutPlan {
+  id        String   @id @default(uuid())
+  userId    String
+  workoutId String
+  date      DateTime
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  workout Workout @relation(fields: [workoutId], references: [id])
 }

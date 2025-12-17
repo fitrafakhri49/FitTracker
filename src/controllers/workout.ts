@@ -312,7 +312,6 @@ export async function createWorkout(req: Request, res: Response) {
         return res.status(401).json({ message: "User not authenticated" });
       }
   
-      // Ambil history workout beserta exercise-nya
       const historyExercises = await prisma.workoutHistory.findMany({
         where: {
           user_id: user.id,
