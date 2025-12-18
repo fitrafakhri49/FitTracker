@@ -23,6 +23,7 @@ model User {
   stats       UserStats?
   workouts    Workout[]
   WorkoutPlan WorkoutPlan[]
+  pushToken   expoPushToken[]
 
   @@map("users")
 }
@@ -119,4 +120,15 @@ model WorkoutPlan {
 
   user    User    @relation(fields: [userId], references: [id])
   workout Workout @relation(fields: [workoutId], references: [id])
+}
+
+model expoPushToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  user_id   String?
+  token     String
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [user_id], references: [id])
+
+  @@map("expo_push_tokens")
 }
