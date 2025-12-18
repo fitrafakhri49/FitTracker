@@ -1,6 +1,8 @@
 import { WorkoutProvider } from "@/context/WorkoutContext";
 import { WorkoutPlanProvider } from "@/context/workoutPlancontext";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { supabase } from "@/lib/supabase";
+import { registerForPushNotificationsAsync } from "@/utils/notification";
 import {
   DarkTheme,
   DefaultTheme,
@@ -68,6 +70,46 @@ export default function RootLayout() {
     };
   }, []);
   // ───────────────────────────────────────
+
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!session?.user) return;
+
+        const token = await registerForPushNotificationsAsync();
+        if (!token) return;
+
+        await supabase.from("expo_push_tokens").upsert({
+          user_id: session.user.id,
+          token,
+        });
+
+        console.log("Push token saved to Supabase");
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    const sub = Notifications.addNotificationReceivedListener((n) => {
+      console.log("Notification received:", n);
+    });
+
+    const subResponse = Notifications.addNotificationResponseReceivedListener(
+      (r) => {
+        console.log("User tapped notification:", r);
+      }
+    );
+
+    return () => {
+      sub.remove();
+      subResponse.remove();
+    };
+  }, []);
+
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <WorkoutProvider>

@@ -31,9 +31,6 @@ export default function AddPlanWorkoutScreen() {
   useEffect(() => {
     fetchWorkouts();
   }, []);
-  useEffect(() => {
-    fetchWorkouts();
-  }, []);
 
   const fetchWorkouts = async () => {
     const raw = await AsyncStorage.getItem("sb-session");

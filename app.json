@@ -7,7 +7,10 @@
     "icon": "./assets/images/icon.png",
     "scheme": "fittracker",
     "extra": {
-      "expoClientId": "646631206058-lq60pl2ftjp1fo9ej76d2j8l74hocnnn.apps.googleusercontent.com"
+      "router": {},
+      "eas": {
+        "projectId": "8c2ffd0b-6585-40c3-9e57-7680a94fa677"
+      }
     },
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -42,17 +45,17 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-notifications",{
+          "icon":"./assets/images/favicon.png"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "8c2ffd0b-6585-40c3-9e57-7680a94fa677"
-      }
-    }
+    "owner": "fitrafakhri49"
   }
 }

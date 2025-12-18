@@ -1,12 +1,17 @@
-import Constants from 'expo-constants';
-import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import Constants from "expo-constants";
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
 
-// Default notification handler
+/**
+ * Default notification handler
+ * Digunakan untuk foreground notification
+ */
+
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldPlaySound: false,
+    shouldPlaySound: true,
     shouldSetBadge: false,
     shouldShowBanner: true,
     shouldShowList: true,
@@ -14,48 +19,66 @@ Notifications.setNotificationHandler({
 });
 
 /**
- * Register device for push notifications
+ * Register device for push notifications (Expo Push Service)
  */
-export async function registerForPushNotificationsAsync(): Promise<string | undefined> {
+export async function registerForPushNotificationsAsync(): Promise<
+  string | undefined
+> {
   let token: string | undefined;
 
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('myNotificationChannel', {
-      name: 'Default',
+  // Android notification channel (WAJIB)
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "Default",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
+      lightColor: "#FF231F7C",
     });
   }
 
-  if (Device.isDevice) {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
+  if (!Device.isDevice) {
+    alert("Must use physical device for Push Notifications");
+    return;
+  }
 
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
+  const { status: existingStatus } =
+    await Notifications.getPermissionsAsync();
+  let finalStatus = existingStatus;
+
+  if (existingStatus !== "granted") {
+    const { status } =
+      await Notifications.requestPermissionsAsync();
+    finalStatus = status;
+  }
+
+  if (finalStatus !== "granted") {
+    alert("Failed to get push token for push notification!");
+    return;
+  }
+
+  try {
+    /**
+     * Project ID WAJIB untuk EAS
+     * Aman untuk managed & production
+     */
+    const projectId =
+      Constants.easConfig?.projectId ??
+      Constants.expoConfig?.extra?.eas?.projectId;
+
+    if (!projectId) {
+      throw new Error("EAS projectId not found");
     }
 
-    if (finalStatus !== 'granted') {
-      alert('Failed to get push token for push notification!');
-      return;
-    }
+    token = (
+      await Notifications.getExpoPushTokenAsync({
+        projectId,
+      })
+    ).data;
 
-    try {
-      const projectId =
-        Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
-      if (!projectId) {
-        throw new Error('Project ID not found');
-      }
-      token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-      console.log('Expo Push Token:', token);
-    } catch (e) {
-      console.log('Error getting push token:', e);
-      token = `${e}`;
-    }
-  } else {
-    alert('Must use physical device for Push Notifications');
+    console.log("Expo Push Token:", token);
+  } catch (error) {
+    console.log("Error getting push token:", error);
+    return;
   }
 
   return token;
@@ -81,6 +104,7 @@ export async function schedulePushNotification(
       title,
       body,
       data,
+      sound: "default",
     },
     trigger,
   });
@@ -89,15 +113,17 @@ export async function schedulePushNotification(
 /**
  * Get all Android notification channels
  */
-export async function getNotificationChannels(): Promise<Notifications.NotificationChannel[]> {
-  if (Platform.OS === 'android') {
+export async function getNotificationChannels(): Promise<
+  Notifications.NotificationChannel[]
+> {
+  if (Platform.OS === "android") {
     return (await Notifications.getNotificationChannelsAsync()) ?? [];
   }
   return [];
 }
 
 /**
- * Add listener for received notifications
+ * Add listener for received notifications (foreground)
  */
 export function addNotificationReceivedListener(
   callback: (notification: Notifications.Notification) => void
@@ -113,3 +139,4 @@ export function addNotificationResponseListener(
 ) {
   return Notifications.addNotificationResponseReceivedListener(callback);
 }
+
