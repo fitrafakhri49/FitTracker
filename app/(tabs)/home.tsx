@@ -351,9 +351,6 @@ export default function FitnessDashboard() {
                 <MaterialIcons name="timer" size={14} color="#888" />
                 <Text style={styles.workoutStatText}>{workout.duration}</Text>
               </View>
-              <TouchableOpacity style={styles.viewButton}>
-                <Text style={styles.viewButtonText}>VIEW</Text>
-              </TouchableOpacity>
             </View>
           </TouchableOpacity>
         ))}
@@ -668,18 +665,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
-  viewButton: {
-    backgroundColor: "#1D24CA",
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  viewButtonText: {
-    color: "#000",
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 1,
-  },
+
   goalCard: {
     backgroundColor: "#111",
     borderRadius: 15,

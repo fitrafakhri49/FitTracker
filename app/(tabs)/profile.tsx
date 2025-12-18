@@ -25,10 +25,39 @@ export default function ProfileScreen() {
   const [userStats, setUserStats] = useState({
     workoutsCompleted: 0,
     caloriesBurned: 0,
-    streakDays: 0,
-    goalsCompleted: 0,
+    // streakDays: 0,
+    maintenanceCalories: 0,
   });
   const [backendWorkouts, setBackendWorkouts] = useState(0);
+  const fetchMaintenanceCalories = async (userId: string) => {
+    try {
+      const response = await axios.get(
+        `http://192.168.18.247:3000/api/v1/users/me/maintenance-calories`,
+        {
+          headers: {
+            Authorization: `Bearer ${
+              (
+                await supabase.auth.getSession()
+              ).data.session?.access_token
+            }`,
+          },
+          params: {
+            userId, // jika endpoint butuh parameter user
+          },
+        }
+      );
+
+      if (response.data?.success) {
+        const calories = response.data.maintenanceCalories;
+        setUserStats((prev) => ({
+          ...prev,
+          maintenanceCalories: calories,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching maintenance calories:", error);
+    }
+  };
 
   const loadSession = async () => {
     try {
@@ -144,6 +173,7 @@ export default function ProfileScreen() {
     // Ambil data stats
     await fetchUserStats(user.id);
     await fetchBackendWorkouts(user.id);
+    await fetchMaintenanceCalories(user.id); // tambahkan ini
   };
 
   // Fungsi untuk mengambil statistik user dari database
@@ -172,8 +202,7 @@ export default function ProfileScreen() {
         workoutsCompleted: totalWorkouts, // total workout history
         caloriesBurned: totalCalories,
         // Biarkan streakDays dan goalsCompleted tetap dari user_stats
-        streakDays: prev.streakDays,
-        goalsCompleted: prev.goalsCompleted,
+        // streakDays: prev.streakDays,
       }));
     } catch (error) {
       console.error("Error in fetchUserStats:", error);
@@ -209,36 +238,43 @@ export default function ProfileScreen() {
     {
       id: 2,
       title: "CALORIES",
-      value: formatNumber(userStats.caloriesBurned),
+      value: userStats.maintenanceCalories,
       icon: "fire",
       color: "#FF6B6B",
-      description: "Total burned",
+      description: "Maintenance Calories",
     },
-    {
-      id: 3,
-      title: "STREAK",
-      value: userStats.streakDays,
-      icon: "bolt",
-      color: "#FFD700",
-      description: "Current days",
-    },
-    {
-      id: 4,
-      title: "GOALS",
-      value: `${userStats.goalsCompleted}%`,
-      icon: "bullseye",
-      color: "#4ECDC4",
-      description: "Completion rate",
-    },
+    // {
+    //   id: 3,
+    //   title: "STREAK",
+    //   // value: userStats.streakDays,
+    //   icon: "bolt",
+    //   color: "#FFD700",
+    //   description: "Current days",
+    // },
   ];
 
   const settingsOptions = [
-    { id: 1, title: "Edit Profile", icon: "user-edit", color: "#1D24CA" },
-    { id: 2, title: "Workout Plans", icon: "clipboard-list", color: "#FF6B6B" },
-    { id: 3, title: "Notifications", icon: "bell", color: "#FFD700" },
-    { id: 4, title: "Privacy", icon: "lock", color: "#4ECDC4" },
-    { id: 5, title: "Help & Support", icon: "question-circle", color: "#888" },
-    { id: 6, title: "About", icon: "info-circle", color: "#666" },
+    {
+      id: 1,
+      title: "Edit Profile",
+      icon: "user-edit",
+      color: "#1D24CA",
+      route: "/profile" as const,
+    },
+    {
+      id: 2,
+      title: "Calculate Calories",
+      icon: "calculator",
+      color: "#4CAF50",
+      route: "/recalculateCalorie" as const,
+    },
+    {
+      id: 3,
+      title: "Notifications",
+      icon: "bell",
+      color: "#FFD700",
+      route: "/profile" as const,
+    },
   ];
 
   useEffect(() => {
@@ -387,36 +423,6 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
-
-        {/* Quick Stats */}
-        <View style={styles.quickStats}>
-          <View style={styles.quickStat}>
-            <Text style={styles.quickStatValue}>
-              {userStats.workoutsCompleted > 0
-                ? Math.floor(userStats.workoutsCompleted / 4)
-                : 0}
-            </Text>
-            <Text style={styles.quickStatLabel}>Weekly Avg</Text>
-          </View>
-          <View style={styles.quickStatDivider} />
-          <View style={styles.quickStat}>
-            <Text style={styles.quickStatValue}>
-              {Math.floor(userStats.workoutsCompleted * 1.5)}
-            </Text>
-            <Text style={styles.quickStatLabel}>Monthly Hrs</Text>
-          </View>
-          <View style={styles.quickStatDivider} />
-          <View style={styles.quickStat}>
-            <Text style={styles.quickStatValue}>
-              {formatNumber(
-                Math.floor(
-                  userStats.caloriesBurned / (userStats.workoutsCompleted || 1)
-                )
-              )}
-            </Text>
-            <Text style={styles.quickStatLabel}>Avg Cal</Text>
-          </View>
-        </View>
       </Animated.View>
 
       {/* Stats Grid */}
@@ -439,7 +445,6 @@ export default function ProfileScreen() {
         ))}
       </View>
 
-      {/* Settings */}
       <Text style={styles.sectionTitle}>SETTINGS</Text>
       <View style={styles.settingsContainer}>
         {settingsOptions.map((option) => (
@@ -447,6 +452,11 @@ export default function ProfileScreen() {
             key={option.id}
             style={styles.settingOption}
             activeOpacity={0.7}
+            onPress={() => {
+              if (option.route) {
+                router.push(option.route);
+              }
+            }}
           >
             <View style={styles.settingLeft}>
               <View
