@@ -20,6 +20,14 @@ model User {
   name       String?
   avatar_url String?
 
+  gender    Gender?
+  birthDate DateTime?
+  heightCm  Float?
+  weightKg  Float?
+  activity  ActivityLevel?
+
+  maintenanceCalories Int?
+
   stats       UserStats?
   workouts    Workout[]
   WorkoutPlan WorkoutPlan[]
@@ -131,4 +139,17 @@ model expoPushToken {
   user User? @relation(fields: [user_id], references: [id])
 
   @@map("expo_push_tokens")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum ActivityLevel {
+  SEDENTARY // 1.2
+  LIGHT // 1.375
+  MODERATE // 1.55
+  ACTIVE // 1.725
+  VERY_ACTIVE // 1.9
 }
