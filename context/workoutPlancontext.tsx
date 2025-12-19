@@ -5,6 +5,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 export interface WorkoutPlan {
   id: string;
   date: string;
+  completed?: boolean; // tambahkan properti completed
   workout: {
     id: string;
     name: string;
@@ -23,6 +24,7 @@ interface WorkoutPlanContextType {
   loading: boolean;
   fetchPlans: () => Promise<void>;
   addPlan: (plan: WorkoutPlan) => void;
+  markWorkoutCompleted: (workoutId: string) => Promise<void>; // tambahkan fungsi
 }
 
 const WorkoutPlanContext = createContext<WorkoutPlanContextType | null>(null);
@@ -49,12 +51,41 @@ export const WorkoutPlanProvider = ({
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    setPlans(res.data.data);
+    // tambahkan properti completed default false
+    const plansWithCompleted = res.data.data.map((p: WorkoutPlan) => ({
+      ...p,
+      completed: p.completed || false,
+    }));
+
+    setPlans(plansWithCompleted);
     setLoading(false);
   };
 
   const addPlan = (plan: WorkoutPlan) => {
     setPlans((prev) => [plan, ...prev]);
+  };
+
+  // Fungsi menandai workout sudah selesai
+  const markWorkoutCompleted = async (workoutId: string) => {
+    try {
+      const token = await getToken();
+
+      // Patch ke backend (buat endpoint di backend nanti)
+      await axios.patch(
+        `http://192.168.18.247:3000/api/v1/plan/${workoutId}/complete`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Update state lokal
+      setPlans((prev) =>
+        prev.map((p) =>
+          p.workout.id === workoutId ? { ...p, completed: true } : p
+        )
+      );
+    } catch (err) {
+      console.error("Error marking workout completed:", err);
+    }
   };
 
   useEffect(() => {
@@ -63,7 +94,7 @@ export const WorkoutPlanProvider = ({
 
   return (
     <WorkoutPlanContext.Provider
-      value={{ plans, loading, fetchPlans, addPlan }}
+      value={{ plans, loading, fetchPlans, addPlan, markWorkoutCompleted }}
     >
       {children}
     </WorkoutPlanContext.Provider>

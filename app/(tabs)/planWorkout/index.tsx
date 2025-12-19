@@ -1,7 +1,7 @@
 import { useWorkoutPlans } from "@/context/workoutPlancontext";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useFocusEffect, useRouter } from "expo-router"; // <-- pakai useFocusEffect
+import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,31 +16,41 @@ import {
 import { schedulePushNotification } from "@/utils/notification";
 
 export default function PlanWorkoutList() {
-  const { plans, loading, fetchPlans } = useWorkoutPlans();
+  const { plans, loading, fetchPlans, markWorkoutCompleted } =
+    useWorkoutPlans();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch plans on mount
   useEffect(() => {
     fetchPlans();
   }, []);
 
-  // Auto refresh setiap kali screen focus
   useFocusEffect(
     useCallback(() => {
       fetchPlans();
     }, [])
   );
 
-  // Pull-to-refresh handler
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchPlans();
     setRefreshing(false);
   }, []);
 
+  const handleStartWorkout = async (plan: any) => {
+    router.push(`/startWorkout/${plan.workout.id}`);
+
+    // Tandai workout sudah selesai di backend / context
+    await markWorkoutCompleted(plan.id); // plan.id untuk referensi plan
+    fetchPlans(); // refresh list supaya update status terlihat
+  };
+
   const renderItem = ({ item }: any) => (
-    <TouchableOpacity style={styles.planCard} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.planCard}
+      activeOpacity={0.7}
+      onPress={() => handleStartWorkout(item)}
+    >
       <View style={styles.planHeader}>
         <MaterialIcons name="fitness-center" size={24} color="#1D24CA" />
         <Text style={styles.planName}>{item.workout.name}</Text>
@@ -53,6 +63,9 @@ export default function PlanWorkoutList() {
           day: "numeric",
         })}
       </Text>
+      {item.completed && (
+        <Text style={styles.completedText}>Workout Completed ✅</Text>
+      )}
     </TouchableOpacity>
   );
 
@@ -113,15 +126,8 @@ export default function PlanWorkoutList() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  container: { flex: 1, padding: 20 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: {
     color: "#FFF",
     marginTop: 20,
@@ -134,16 +140,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "900",
-    color: "#FFF",
-  },
-  addButton: {
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: "#1D24CA",
-  },
+  headerTitle: { fontSize: 28, fontWeight: "900", color: "#FFF" },
+  addButton: { padding: 8, borderRadius: 12, backgroundColor: "#1D24CA" },
   planCard: {
     backgroundColor: "#111",
     borderRadius: 12,
@@ -158,26 +156,16 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 10,
   },
-  planName: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  planDate: {
-    color: "#888",
-    fontSize: 14,
-  },
+  planName: { color: "#FFF", fontSize: 16, fontWeight: "700" },
+  planDate: { color: "#888", fontSize: 14 },
+  completedText: { color: "#28A745", fontWeight: "700", marginTop: 5 },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     marginTop: 100,
   },
-  emptyText: {
-    color: "#FFF",
-    fontSize: 18,
-    fontWeight: "700",
-  },
+  emptyText: { color: "#FFF", fontSize: 18, fontWeight: "700" },
   emptySubtext: {
     color: "#888",
     fontSize: 14,
