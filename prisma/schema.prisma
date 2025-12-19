@@ -125,6 +125,7 @@ model WorkoutPlan {
   workoutId String
   date      DateTime
   createdAt DateTime @default(now())
+  completed Boolean  @default(false) // kolom baru
 
   user    User    @relation(fields: [userId], references: [id])
   workout Workout @relation(fields: [workoutId], references: [id])
@@ -152,4 +153,5 @@ enum ActivityLevel {
   MODERATE // 1.55
   ACTIVE // 1.725
   VERY_ACTIVE // 1.9
+  EXTRA_ACTIVE
 }

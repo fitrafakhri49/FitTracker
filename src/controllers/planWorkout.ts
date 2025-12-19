@@ -107,3 +107,31 @@ export async function getPlanWorkout(req:Request,res:Response) {
         return res.status(500).json({ message: error.message });
     }
 }
+
+// Tandai workout plan selesai
+export async function completeWorkoutPlan(req: Request, res: Response) {
+  try {
+    const userId = (req as any).user.id;
+    const { planId } = req.params; // planId dikirim lewat URL, misal /plan/:planId/complete
+
+    // Update kolom completed menjadi true
+    const updatedPlan = await prisma.workoutPlan.updateMany({
+      where: {
+        id: planId,
+        user_id: userId,
+      },
+      data: {
+        completed: true,
+      },
+    });
+
+    if (updatedPlan.count === 0) {
+      return res.status(404).json({ success: false, message: "Plan not found or already completed" });
+    }
+
+    res.status(200).json({ success: true, message: "Workout plan marked as completed" });
+  } catch (err: any) {
+    console.error("Error marking workout plan completed:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+}

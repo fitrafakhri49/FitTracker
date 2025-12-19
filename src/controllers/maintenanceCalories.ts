@@ -7,7 +7,7 @@ export async function recalculateCalories(req: Request, res: Response) {
   
       const user = await updateMaintenanceCalories(userId);
   
-      res.json({
+      res.status(200).json({
         message: "Maintenance calories updated",
         maintenanceCalories: user.maintenanceCalories,
       });

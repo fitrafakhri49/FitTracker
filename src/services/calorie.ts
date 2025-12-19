@@ -23,17 +23,3 @@ export async function updateMaintenanceCalories(userId: string) {
   
 
 
-export async function getMaintenanceCalories(userId: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      maintenanceCalories: true,
-    },
-  });
-
-  if (!user) {
-    throw new Error("User not found");
-  }
-
-  return user;
-}
