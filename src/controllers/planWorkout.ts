@@ -118,7 +118,7 @@ export async function completeWorkoutPlan(req: Request, res: Response) {
     const updatedPlan = await prisma.workoutPlan.updateMany({
       where: {
         id: planId,
-        user_id: userId,
+        userId: userId,
       },
       data: {
         completed: true,
