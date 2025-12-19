@@ -17,7 +17,13 @@ import {
 
 // ===== ENUMS BACKEND =====
 type Gender = "MALE" | "FEMALE";
-type Activity = "SEDENTARY" | "LIGHT" | "MODERATE" | "ACTIVE" | "VERY_ACTIVE";
+type Activity =
+  | "SEDENTARY"
+  | "LIGHT"
+  | "MODERATE"
+  | "ACTIVE"
+  | "VERY_ACTIVE"
+  | "EXTRA_ACTIVE"; // Tambahkan EXTRA_ACTIVE
 
 export default function RecalculateCaloriesScreen() {
   const router = useRouter();
@@ -75,7 +81,6 @@ export default function RecalculateCaloriesScreen() {
       const raw = await AsyncStorage.getItem("sb-session");
       if (!raw) throw new Error("Not authenticated");
       const token = JSON.parse(raw).access_token;
-      console.log("Auth Token (loadUser):", token); // <--- tampilkan token di console
 
       const payload = {
         birthDate: parseBirthDate(birthDate),
@@ -174,11 +179,27 @@ export default function RecalculateCaloriesScreen() {
           style={styles.picker}
         >
           <Picker.Item label="Select Activity" value="" />
-          <Picker.Item label="Sedentary" value="SEDENTARY" />
-          <Picker.Item label="Light" value="LIGHT" />
-          <Picker.Item label="Moderate" value="MODERATE" />
-          <Picker.Item label="Active" value="ACTIVE" />
-          <Picker.Item label="Very Active" value="VERY_ACTIVE" />
+          <Picker.Item
+            label="Sedentary: little or no exercise"
+            value="SEDENTARY"
+          />
+          <Picker.Item label="Light: exercise 1-3 times/week" value="LIGHT" />
+          <Picker.Item
+            label="Moderate: exercise 4-5 times/week"
+            value="MODERATE"
+          />
+          <Picker.Item
+            label="Active: daily exercise or intense 3-4x/week"
+            value="ACTIVE"
+          />
+          <Picker.Item
+            label="Very Active: intense 6-7 times/week"
+            value="VERY_ACTIVE"
+          />
+          <Picker.Item
+            label="Extra Active: very intense daily / physical job"
+            value="EXTRA_ACTIVE"
+          />
         </Picker>
       </View>
 
@@ -241,18 +262,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     overflow: "hidden",
   },
-  picker: {
-    color: "#FFF",
-  },
+  picker: { color: "#FFF" },
   button: {
     backgroundColor: "#1D24CA",
     padding: 14,
     borderRadius: 10,
     marginTop: 10,
   },
-  buttonText: {
-    color: "#FFF",
-    textAlign: "center",
-    fontWeight: "600",
-  },
+  buttonText: { color: "#FFF", textAlign: "center", fontWeight: "600" },
 });

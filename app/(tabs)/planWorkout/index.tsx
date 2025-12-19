@@ -1,26 +1,42 @@
 import { useWorkoutPlans } from "@/context/workoutPlancontext";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import React, { useEffect } from "react";
+import { useFocusEffect, useRouter } from "expo-router"; // <-- pakai useFocusEffect
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 
-import { schedulePushNotification } from "@/utils/notification"; // import fungsi notifikasi
+import { schedulePushNotification } from "@/utils/notification";
 
 export default function PlanWorkoutList() {
   const { plans, loading, fetchPlans } = useWorkoutPlans();
   const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
 
   // Fetch plans on mount
   useEffect(() => {
     fetchPlans();
+  }, []);
+
+  // Auto refresh setiap kali screen focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchPlans();
+    }, [])
+  );
+
+  // Pull-to-refresh handler
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchPlans();
+    setRefreshing(false);
   }, []);
 
   const renderItem = ({ item }: any) => (
@@ -55,7 +71,6 @@ export default function PlanWorkoutList() {
         <Text style={styles.headerTitle}>Your Workout Plans</Text>
 
         <View style={{ flexDirection: "row", gap: 10 }}>
-          {/* Tombol add plan */}
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => router.push("/planWorkout/add")}
@@ -63,7 +78,6 @@ export default function PlanWorkoutList() {
             <MaterialIcons name="add" size={28} color="#FFF" />
           </TouchableOpacity>
 
-          {/* Tombol test notification */}
           <TouchableOpacity
             style={[styles.addButton, { backgroundColor: "#28A745" }]}
             onPress={() =>
@@ -89,6 +103,9 @@ export default function PlanWorkoutList() {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       )}
     </LinearGradient>

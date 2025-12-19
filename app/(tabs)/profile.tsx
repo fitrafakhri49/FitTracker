@@ -2,14 +2,16 @@
 import { supabase } from "@/lib/supabase";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Animated,
   Image,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -22,6 +24,7 @@ export default function ProfileScreen() {
   const [cardAnim] = useState(new Animated.Value(0));
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [userStats, setUserStats] = useState({
     workoutsCompleted: 0,
     caloriesBurned: 0,
@@ -58,6 +61,17 @@ export default function ProfileScreen() {
       console.error("Error fetching maintenance calories:", error);
     }
   };
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchUserData(); // reload data
+    setRefreshing(false);
+  };
+  useFocusEffect(
+    React.useCallback(() => {
+      // Auto refresh saat halaman fokus
+      fetchUserData();
+    }, [])
+  );
 
   const loadSession = async () => {
     try {
@@ -243,14 +257,6 @@ export default function ProfileScreen() {
       color: "#FF6B6B",
       description: "Maintenance Calories",
     },
-    // {
-    //   id: 3,
-    //   title: "STREAK",
-    //   // value: userStats.streakDays,
-    //   icon: "bolt",
-    //   color: "#FFD700",
-    //   description: "Current days",
-    // },
   ];
 
   const settingsOptions = [
@@ -371,6 +377,9 @@ export default function ProfileScreen() {
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     >
       {/* Header dengan efek sporty */}
       <View style={styles.header}>
