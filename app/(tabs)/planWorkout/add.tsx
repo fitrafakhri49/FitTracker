@@ -25,7 +25,7 @@ export default function AddPlanWorkoutScreen() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [selectedWorkout, setSelectedWorkout] = useState<string | null>(null);
   const [date, setDate] = useState(new Date());
-  const [showPicker, setShowPicker] = useState(false); // kontrol visibilitas picker
+  const [showPicker, setShowPicker] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,21 +33,32 @@ export default function AddPlanWorkoutScreen() {
   }, []);
 
   const fetchWorkouts = async () => {
-    const raw = await AsyncStorage.getItem("sb-session");
-    if (!raw) throw new Error("No session");
+    try {
+      const raw = await AsyncStorage.getItem("sb-session");
+      if (!raw) throw new Error("No session");
 
-    const session = JSON.parse(raw);
-    const token = session.access_token;
+      const session = JSON.parse(raw);
+      const token = session.access_token;
 
-    const res = await axios.get("http://192.168.18.247:3000/api/v1/workouts", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+      const res = await axios.get(
+        "http://192.168.18.247:3000/api/v1/workouts",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-    setWorkouts(res.data.data);
-    setLoading(false);
+      setWorkouts(res.data.data || []);
+    } catch (error) {
+      console.error("Error fetching workouts:", error);
+      setWorkouts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const submitPlan = async () => {
+    if (!selectedWorkout) return;
+
     const raw = await AsyncStorage.getItem("sb-session");
     const token = JSON.parse(raw!).access_token;
 
@@ -57,11 +68,11 @@ export default function AddPlanWorkoutScreen() {
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    addPlan(res.data.data); // langsung masuk list
+    addPlan(res.data.data);
     const now = new Date();
     const selectedDate = new Date(date);
     let seconds = Math.floor((selectedDate.getTime() - now.getTime()) / 1000);
-    if (seconds <= 0) seconds = 1; // jika waktu di masa lalu, jadwalkan 1 detik lagi
+    if (seconds <= 0) seconds = 1;
     await schedulePushNotification(
       "Workout Reminder 🏋️",
       `Time to do your workout: ${res.data.data.workout.name}`,
@@ -74,7 +85,25 @@ export default function AddPlanWorkoutScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator />
+        <ActivityIndicator size="large" color="#1D24CA" />
+      </View>
+    );
+  }
+
+  // Jika workouts kosong
+  if (workouts.length === 0) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.noWorkoutText}>There is no workout 😅</Text>
+        <Text style={styles.noWorkoutSubtext}>
+          Please create a workout first
+        </Text>
+        <TouchableOpacity
+          style={styles.goWorkoutButton}
+          onPress={() => router.push("/(tabs)/workout")}
+        >
+          <Text style={styles.goWorkoutButtonText}>Go to Workouts</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -171,4 +200,17 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   submitText: { color: "#FFF", textAlign: "center", fontWeight: "600" },
+  noWorkoutText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#FFF",
+    marginBottom: 10,
+  },
+  noWorkoutSubtext: { fontSize: 14, color: "#888", marginBottom: 20 },
+  goWorkoutButton: {
+    backgroundColor: "#1D24CA",
+    padding: 12,
+    borderRadius: 10,
+  },
+  goWorkoutButtonText: { color: "#FFF", fontWeight: "700" },
 });

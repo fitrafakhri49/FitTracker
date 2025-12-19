@@ -252,7 +252,7 @@ export default function ProfileScreen() {
     {
       id: 2,
       title: "CALORIES",
-      value: userStats.maintenanceCalories,
+      value: userStats.maintenanceCalories || "0",
       icon: "fire",
       color: "#FF6B6B",
       description: "Maintenance Calories",
@@ -269,7 +269,7 @@ export default function ProfileScreen() {
     },
     {
       id: 2,
-      title: "Calculate Calories",
+      title: "Calculate Maintenance Calories",
       icon: "calculator",
       color: "#4CAF50",
       route: "/recalculateCalorie" as const,

@@ -13,18 +13,18 @@ import {
   View,
 } from "react-native";
 
-import { schedulePushNotification } from "@/utils/notification";
-
 export default function PlanWorkoutList() {
   const { plans, loading, fetchPlans, markWorkoutCompleted } =
     useWorkoutPlans();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
+  // initial fetch
   useEffect(() => {
     fetchPlans();
   }, []);
 
+  // refresh otomatis saat screen kembali
   useFocusEffect(
     useCallback(() => {
       fetchPlans();
@@ -38,36 +38,56 @@ export default function PlanWorkoutList() {
   }, []);
 
   const handleStartWorkout = async (plan: any) => {
+    if (!plan.workout) return; // safety check
+
     router.push(`/startWorkout/${plan.workout.id}`);
 
-    // Tandai workout sudah selesai di backend / context
+    // Tandai workout sudah selesai di context
     await markWorkoutCompleted(plan.id); // plan.id untuk referensi plan
     fetchPlans(); // refresh list supaya update status terlihat
   };
 
-  const renderItem = ({ item }: any) => (
-    <TouchableOpacity
-      style={styles.planCard}
-      activeOpacity={0.7}
-      onPress={() => handleStartWorkout(item)}
-    >
-      <View style={styles.planHeader}>
-        <MaterialIcons name="fitness-center" size={24} color="#1D24CA" />
-        <Text style={styles.planName}>{item.workout.name}</Text>
-      </View>
-      <Text style={styles.planDate}>
-        {new Date(item.date).toLocaleDateString("en-US", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })}
-      </Text>
-      {item.completed && (
-        <Text style={styles.completedText}>Workout Completed ✅</Text>
-      )}
-    </TouchableOpacity>
-  );
+  const renderItem = ({ item }: any) => {
+    if (!item.workout) {
+      return (
+        <View style={styles.planCard}>
+          <Text style={styles.noWorkoutText}>There is no workout Plan</Text>
+          <TouchableOpacity
+            style={[styles.addButton, { marginTop: 10 }]}
+            onPress={() => router.push("/(tabs)/workout")}
+          >
+            <Text style={{ color: "#FFF", fontWeight: "700" }}>
+              Create Workout Plan
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return (
+      <TouchableOpacity
+        style={styles.planCard}
+        activeOpacity={0.7}
+        onPress={() => handleStartWorkout(item)}
+      >
+        <View style={styles.planHeader}>
+          <MaterialIcons name="fitness-center" size={24} color="#1D24CA" />
+          <Text style={styles.planName}>{item.workout.name}</Text>
+        </View>
+        <Text style={styles.planDate}>
+          {new Date(item.date).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </Text>
+        {item.completed && (
+          <Text style={styles.completedText}>Workout Completed ✅</Text>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return (
@@ -82,33 +102,23 @@ export default function PlanWorkoutList() {
     <LinearGradient colors={["#000", "#0A0A0A"]} style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Your Workout Plans</Text>
-
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => router.push("/planWorkout/add")}
-          >
-            <MaterialIcons name="add" size={28} color="#FFF" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.addButton, { backgroundColor: "#28A745" }]}
-            onPress={() =>
-              schedulePushNotification(
-                "Test Notification 🏋️",
-                "This is a test notification from PlanWorkout screen"
-              )
-            }
-          >
-            <MaterialIcons name="notifications" size={28} color="#FFF" />
-          </TouchableOpacity>
-        </View>
       </View>
 
       {plans.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No workout plans yet</Text>
-          <Text style={styles.emptySubtext}>Tap + to create a new plan</Text>
+          <Text style={styles.emptyText}>There is no workout plan😅</Text>
+          <Text style={styles.emptySubtext}>
+            Tap the button below to create your first workout
+          </Text>
+
+          <TouchableOpacity
+            style={[styles.addButton, { marginTop: 20 }]}
+            onPress={() => router.push("/planWorkout/add")}
+          >
+            <Text style={{ color: "#FFF", fontWeight: "700" }}>
+              Create Workout Plan
+            </Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
@@ -159,6 +169,7 @@ const styles = StyleSheet.create({
   planName: { color: "#FFF", fontSize: 16, fontWeight: "700" },
   planDate: { color: "#888", fontSize: 14 },
   completedText: { color: "#28A745", fontWeight: "700", marginTop: 5 },
+  noWorkoutText: { color: "#FFF", fontSize: 16, fontWeight: "700" },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
